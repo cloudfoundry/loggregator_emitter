@@ -1,4 +1,5 @@
 require "loggregator_messages/log_message.pb"
+require 'socket'
 
 module LoggregatorEmitter
 
