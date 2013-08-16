@@ -1,6 +1,6 @@
 require "loggregator_messages/log_message.pb"
 
-module LoggregatorSender
+module LoggregatorEmitter
 
   def self.emit(sock, target, message)
     s = Socket.new(Socket::AF_UNIX, Socket::SOCK_DGRAM, 0)
@@ -18,7 +18,7 @@ module LoggregatorSender
 
     s.connect(Socket.pack_sockaddr_un(sock))
     s.send(result, 0)
-  rescue Errno::ENOENT
+  rescue Errno::ENOENT => e
     # Just ignore it.
   end
 end

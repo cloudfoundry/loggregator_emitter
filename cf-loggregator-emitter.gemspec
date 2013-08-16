@@ -1,7 +1,7 @@
 # coding: utf-8
 
 Gem::Specification.new do |spec|
-  spec.name          = "loggregator_sender"
+  spec.name          = "loggregator_emitter"
   spec.version       = '0.0.1.pre'
   spec.authors       = ["Pivotal"]
   spec.email         = ["cf-eng@pivotallabs.com"]

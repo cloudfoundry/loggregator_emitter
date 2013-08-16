@@ -1,3 +1,3 @@
-# Loggregator Sender
+# Loggregator Emitter
 
-This gem provides an API to send messages to the loggregator agent from Ruby applications.
+This gem provides an API to emit messages to the loggregator agent from Ruby applications.

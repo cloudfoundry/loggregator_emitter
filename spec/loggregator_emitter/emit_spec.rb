@@ -1,20 +1,20 @@
 require 'support/fake_loggregator_agent'
-require 'loggregator_sender/sender'
-require 'loggregator_sender/target'
+require 'loggregator_emitter/emit'
+require 'loggregator_emitter/target'
 
 describe "Writing to Unix Sockets" do
-  let(:target) { Target.new("orgId", "spaceId", "appId") }
+  let(:target) { LoggregatorEmitter::Target.new("orgId", "spaceId", "appId") }
 
   before do
-    FileUtils.rm("/tmp/loggregator_sender.sock", :force => true)
+    FileUtils.rm("/tmp/loggregator_emitter.sock", :force => true)
   end
 
   it "successfully writes protobuffer to a socket" do
-    agent = FakeLoggregatorAgent.new("/tmp/loggregator_sender.sock")
+    agent = FakeLoggregatorAgent.new("/tmp/loggregator_emitter.sock")
     agent.start
 
-    LoggregatorSender.emit("/tmp/loggregator_sender.sock", target, "Hello there!")
-    LoggregatorSender.emit("/tmp/loggregator_sender.sock", target, "Hello again!")
+    LoggregatorEmitter.emit("/tmp/loggregator_emitter.sock", target, "Hello there!")
+    LoggregatorEmitter.emit("/tmp/loggregator_emitter.sock", target, "Hello again!")
 
     agent.stop(2)
 
@@ -32,6 +32,6 @@ describe "Writing to Unix Sockets" do
   end
 
   it "continues to work if there is no agent listening" do
-    expect{LoggregatorSender.emit("/tmp/loggregator_sender.sock", target, "Hello there!")}.not_to raise_error
+    expect{LoggregatorEmitter.emit("/tmp/loggregator_emitter.sock", target, "Hello there!")}.not_to raise_error
   end
 end
