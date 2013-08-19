@@ -3,8 +3,9 @@ require 'socket'
 
 module LoggregatorEmitter
 
-  def self.emit(sock, target, message)
-    s = Socket.new(Socket::AF_UNIX, Socket::SOCK_DGRAM, 0)
+  def self.emit(loggregator_server, target, message)
+    s = UDPSocket.new
+    s.do_not_reverse_lookup = true
     lm = LogMessage.new()
     lm.timestamp = Time.now.to_i
     lm.message = message
@@ -16,9 +17,9 @@ module LoggregatorEmitter
 
     result = lm.encode.buf
     result.unpack("C*")
+    host, port = loggregator_server.split(":")
 
-    s.connect(Socket.pack_sockaddr_un(sock))
-    s.send(result, 0)
+    s.sendmsg_nonblock(result, 0, Socket.sockaddr_in(port,host))
   rescue Errno::ENOENT => e
     # Just ignore it.
   end

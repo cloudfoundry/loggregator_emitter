@@ -1,23 +1,23 @@
 require 'socket'
 require 'loggregator_messages/log_message.pb'
 
-class FakeLoggregatorAgent
+class FakeLoggregatorServer
 
-  attr_reader :messages, :path, :sock
+  attr_reader :messages, :port, :sock
 
-  def initialize(path)
+  def initialize(port)
     @messages = []
-    @path = path
-    @sock = Socket.new(Socket::AF_UNIX, Socket::SOCK_DGRAM, 0)
+    @port = port
+    @sock = UDPSocket.new
   end
 
   def start
-    @sock.bind(Socket.pack_sockaddr_un(path))
+    @sock.bind('localhost', port)
 
     @thread = Thread.new do
       while true
         begin
-          stuff = @sock.recv(1024)
+          stuff = @sock.recv(65536)
           messages << LogMessage.decode(stuff)
         rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError,  Beefcake::Message::InvalidValueError => e
           puts "ERROR"
@@ -36,7 +36,6 @@ class FakeLoggregatorAgent
       break if max_tries > 10
     end
     @sock.close
-    FileUtils.rm(path)
 
     Thread.kill(@thread)
   end
