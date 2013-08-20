@@ -3,7 +3,7 @@ require 'loggregator_emitter/emit'
 require 'loggregator_emitter/target'
 
 describe "Writing to Sockets" do
-  let(:target) { LoggregatorEmitter::Target.new("orgId", "spaceId", "appId") }
+  let(:target) { LoggregatorEmitter::Target.new("appId") }
 
   it "successfully writes protobuffer to a socket" do
     server = FakeLoggregatorServer.new(12345)
@@ -19,8 +19,6 @@ describe "Writing to Sockets" do
     expect(messages.length).to eq 2
     message = messages[0]
     expect(message.message).to eq "Hello there!"
-    expect(message.organization_id).to eq target.organization_id
-    expect(message.space_id).to eq target.space_id
     expect(message.app_id).to eq target.app_id
 
     message = messages[1]

@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["cf-eng@pivotallabs.com"]
   spec.description   = "Library to emit data to Loggregator"
   spec.summary       = "Library to emit data to Loggregator"
-  spec.homepage      = ""
+  spec.homepage      = "https://www.github.com/cloudfoundry/loggregator_emitter"
   spec.license       = "Apache 2.0"
 
   spec.files         = `git ls-files`.split($/)

@@ -1,4 +1,4 @@
-require "loggregator_messages/log_message.pb"
+require "loggregator_messages"
 require 'socket'
 
 module LoggregatorEmitter
@@ -11,8 +11,6 @@ module LoggregatorEmitter
     lm.message = message
     lm.app_id = target.app_id
     lm.source_type = LogMessage::SourceType::DEA
-    lm.organization_id = target.organization_id
-    lm.space_id = target.space_id
     lm.message_type = LogMessage::MessageType::OUT
 
     result = lm.encode.buf
