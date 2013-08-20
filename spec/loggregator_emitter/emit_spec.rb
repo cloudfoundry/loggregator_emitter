@@ -9,8 +9,8 @@ describe "Writing to Sockets" do
     server = FakeLoggregatorServer.new(12345)
     server.start
 
-    LoggregatorEmitter.emit('localhost:12345', target, "Hello there!")
-    LoggregatorEmitter.emit('localhost:12345', target, "Hello again!")
+    LoggregatorEmitter.emit('0.0.0.0:12345', target, "Hello there!")
+    LoggregatorEmitter.emit('0.0.0.0:12345', target, "Hello again!")
 
     server.stop(2)
 
@@ -26,6 +26,6 @@ describe "Writing to Sockets" do
   end
 
   it "continues to work if there is no server listening" do
-    expect{LoggregatorEmitter.emit('localhost:12345', target, "Hello there!")}.not_to raise_error
+    expect{LoggregatorEmitter.emit('0.0.0.0:12345', target, "Hello there!")}.not_to raise_error
   end
 end
