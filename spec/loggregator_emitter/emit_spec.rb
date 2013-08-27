@@ -33,6 +33,7 @@ describe LoggregatorEmitter do
 
       @emitter.emit("my_app_id", 'Hello there!')
       @emitter.emit("my_app_id", 'Hello again!')
+      @emitter.emit(nil, 'Hello again!')
 
       server.stop(2)
 
@@ -62,6 +63,7 @@ describe LoggregatorEmitter do
 
       @emitter.emit_error("my_app_id", 'Hello there!')
       @emitter.emit_error("my_app_id", 'Hello again!')
+      @emitter.emit_error(nil, 'Hello again!')
 
       server.stop(2)
 

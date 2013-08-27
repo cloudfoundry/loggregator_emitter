@@ -13,13 +13,17 @@ module LoggregatorEmitter
     end
 
     def emit(app_id, message)
-      lm = create_log_message(app_id, message, LogMessage::MessageType::OUT)
-      send_message(lm)
+      if app_id
+        lm = create_log_message(app_id, message, LogMessage::MessageType::OUT)
+        send_message(lm)
+      end
     end
 
     def emit_error(app_id, message)
-      lm = create_log_message(app_id, message, LogMessage::MessageType::ERR)
-      send_message(lm)
+      if app_id
+        lm = create_log_message(app_id, message, LogMessage::MessageType::ERR)
+        send_message(lm)
+      end
     end
 
     private
