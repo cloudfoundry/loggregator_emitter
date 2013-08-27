@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "loggregator_emitter"
-  spec.version       = '0.0.4.pre'
+  spec.version       = '0.0.5.pre'
   spec.authors       = ["Pivotal"]
   spec.email         = ["cf-eng@pivotallabs.com"]
   spec.description   = "Library to emit data to Loggregator"

@@ -22,7 +22,7 @@ describe LoggregatorEmitter do
     end
   end
 
-  describe 'Writing to Sockets' do
+  describe 'Sending To STDOUT' do
     before(:each) do
       @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER)
     end
@@ -43,6 +43,36 @@ describe LoggregatorEmitter do
       expect(message.message).to eq 'Hello there!'
       expect(message.app_id).to eq "my_app_id"
       expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
+      expect(message.message_type).to eq LogMessage::MessageType::OUT
+
+
+      message = messages[1]
+      expect(message.message).to eq 'Hello again!'
+    end
+  end
+
+  describe 'Sending To STDOUT' do
+    before(:each) do
+      @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER)
+    end
+
+    it 'successfully writes protobuffer to a socket' do
+      server = FakeLoggregatorServer.new(12345)
+      server.start
+
+      @emitter.emit_error("my_app_id", 'Hello there!')
+      @emitter.emit_error("my_app_id", 'Hello again!')
+
+      server.stop(2)
+
+      messages = server.messages
+
+      expect(messages.length).to eq 2
+      message = messages[0]
+      expect(message.message).to eq 'Hello there!'
+      expect(message.app_id).to eq "my_app_id"
+      expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
+      expect(message.message_type).to eq LogMessage::MessageType::ERR
 
       message = messages[1]
       expect(message.message).to eq 'Hello again!'
