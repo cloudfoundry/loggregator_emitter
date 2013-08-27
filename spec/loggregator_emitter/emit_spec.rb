@@ -1,10 +1,7 @@
 require 'support/fake_loggregator_server'
 require 'loggregator_emitter/emit'
-require 'loggregator_emitter/target'
 
 describe LoggregatorEmitter do
-
-  let(:target) { LoggregatorEmitter::Target.new('appId') }
 
   describe 'configuring emitter' do
 
@@ -34,8 +31,8 @@ describe LoggregatorEmitter do
       server = FakeLoggregatorServer.new(12345)
       server.start
 
-      @emitter.emit(target, 'Hello there!')
-      @emitter.emit(target, 'Hello again!')
+      @emitter.emit("my_app_id", 'Hello there!')
+      @emitter.emit("my_app_id", 'Hello again!')
 
       server.stop(2)
 
@@ -44,7 +41,7 @@ describe LoggregatorEmitter do
       expect(messages.length).to eq 2
       message = messages[0]
       expect(message.message).to eq 'Hello there!'
-      expect(message.app_id).to eq target.app_id
+      expect(message.app_id).to eq "my_app_id"
       expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
 
       message = messages[1]

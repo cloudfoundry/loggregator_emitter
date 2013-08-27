@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    loggregator_emitter (0.0.3.pre)
+    loggregator_emitter (0.0.4.pre)
       loggregator_messages (~> 0.0.1.pre)
 
 GEM

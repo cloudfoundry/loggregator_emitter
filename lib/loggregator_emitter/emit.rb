@@ -1,6 +1,5 @@
 require "loggregator_messages"
 require 'socket'
-require "steno"
 
 module LoggregatorEmitter
   class Emitter
@@ -13,13 +12,13 @@ module LoggregatorEmitter
       @source_type = source_type
     end
 
-    def emit(target, message)
+    def emit(app_id, message)
       s = UDPSocket.new
       s.do_not_reverse_lookup = true
       lm = LogMessage.new()
       lm.timestamp = Time.now.to_i
       lm.message = message
-      lm.app_id = target.app_id
+      lm.app_id = app_id
       lm.source_type = @source_type
       lm.message_type = LogMessage::MessageType::OUT
 
