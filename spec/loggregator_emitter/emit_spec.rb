@@ -2,30 +2,53 @@ require 'support/fake_loggregator_server'
 require 'loggregator_emitter/emit'
 require 'loggregator_emitter/target'
 
-describe "Writing to Sockets" do
-  let(:target) { LoggregatorEmitter::Target.new("appId") }
+describe LoggregatorEmitter do
 
-  it "successfully writes protobuffer to a socket" do
-    server = FakeLoggregatorServer.new(12345)
-    server.start
+  let(:target) { LoggregatorEmitter::Target.new('appId') }
 
-    LoggregatorEmitter.emit('0.0.0.0:12345', target, "Hello there!")
-    LoggregatorEmitter.emit('0.0.0.0:12345', target, "Hello again!")
+  describe 'configuring emitter' do
 
-    server.stop(2)
+    it 'can be configured' do
+      expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::DEA) }.not_to raise_error
+    end
 
-    messages = server.messages
+    it 'raises if loggregator_server is invalid' do
+      expect { LoggregatorEmitter::Emitter.new('0.0.0.0', LogMessage::SourceType::DEA) }.to raise_error(RuntimeError)
+    end
 
-    expect(messages.length).to eq 2
-    message = messages[0]
-    expect(message.message).to eq "Hello there!"
-    expect(message.app_id).to eq target.app_id
+    it 'doesnt raise if source_type is valid' do
+      expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::DEA) }.not_to raise_error
+    end
 
-    message = messages[1]
-    expect(message.message).to eq "Hello again!"
+    it 'raises if source_type is invalid' do
+      expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', 40) }.to raise_error(RuntimeError)
+    end
   end
 
-  it "continues to work if there is no server listening" do
-    expect{LoggregatorEmitter.emit('0.0.0.0:12345', target, "Hello there!")}.not_to raise_error
+  describe 'Writing to Sockets' do
+    before(:each) do
+      @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER)
+    end
+
+    it 'successfully writes protobuffer to a socket' do
+      server = FakeLoggregatorServer.new(12345)
+      server.start
+
+      @emitter.emit(target, 'Hello there!')
+      @emitter.emit(target, 'Hello again!')
+
+      server.stop(2)
+
+      messages = server.messages
+
+      expect(messages.length).to eq 2
+      message = messages[0]
+      expect(message.message).to eq 'Hello there!'
+      expect(message.app_id).to eq target.app_id
+      expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
+
+      message = messages[1]
+      expect(message.message).to eq 'Hello again!'
+    end
   end
 end
