@@ -20,6 +20,14 @@ describe LoggregatorEmitter do
     it 'raises if source_type is invalid' do
       expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', 40) }.to raise_error(RuntimeError)
     end
+
+    it 'raises if host is not ip is invalid' do
+      expect { LoggregatorEmitter::Emitter.new('localhost:12345', 40) }.to raise_error(RuntimeError)
+    end
+
+    it 'raises if host has protocol' do
+      expect { LoggregatorEmitter::Emitter.new('http://0.0.0.0:12345', 40) }.to raise_error(RuntimeError)
+    end
   end
 
   describe 'Sending To STDOUT' do
