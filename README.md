@@ -28,7 +28,9 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
 
     emitter = LoggregatorEmitter::Emitter.new("10.10.10.16:38452", LogMessage::SourceType::CLOUD_CONTROLLER)
 
-    emitter.emit(app_id,message)
+    app_guid = "a8977cb6-3365-4be1-907e-0c878b3a4c6b" # The GUID(UUID) for the user's application
 
-    emitter.emit_error(app_id,error_message)
+    emitter.emit(app_guid,message) # Emits messages with a message type of OUT
+
+    emitter.emit_error(app_guid,error_message) # Emits messages with a message type of ERR
 
