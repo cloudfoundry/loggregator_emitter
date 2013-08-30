@@ -4,7 +4,7 @@
 
 This gem provides an API to emit messages to the loggregator agent from Ruby applications.
 
-Create an emitter object with the loggregator server host and port, and source type of the emitter.
+Create an emitter object with the loggregator router host and port, and source type of the emitter.
 
 Call emit() or emit_error() on this emitter with the application GUID and the message string.
 
