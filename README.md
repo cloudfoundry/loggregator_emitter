@@ -16,6 +16,12 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
  	LogMessage::SourceType::DEA
  	LogMessage::SourceType::WARDEN_CONTAINER
 
+### Setup
+
+    Add the loggregator_emitter gem to your gemfile.
+
+    gem "loggregator_emitter"
+
 ### Sample Workflow
 
     require "loggregator_emitter"
