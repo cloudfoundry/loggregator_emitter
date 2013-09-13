@@ -30,7 +30,7 @@ module LoggregatorEmitter
     private
     def create_log_message(app_id, message, type)
       lm = LogMessage.new()
-      lm.timestamp = Time.now.to_i
+      lm.time = Time.now
       lm.message = message
       lm.app_id = app_id
       lm.source_type = @source_type
