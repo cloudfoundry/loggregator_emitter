@@ -9,7 +9,7 @@ GEM
   specs:
     beefcake (0.3.7)
     diff-lcs (1.2.4)
-    loggregator_messages (0.0.1.pre)
+    loggregator_messages (0.0.4.pre)
       beefcake (~> 0.3.7)
     rake (10.1.0)
     rspec (2.14.1)
@@ -27,5 +27,6 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.3)
   loggregator_emitter!
+  loggregator_messages (~> 0.0.4.pre)
   rake (~> 10.1.0)
   rspec (~> 2.14.1)
