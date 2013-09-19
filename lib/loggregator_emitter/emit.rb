@@ -3,7 +3,7 @@ require 'socket'
 
 module LoggregatorEmitter
   class Emitter
-    def initialize(loggregator_server, source_type)
+    def initialize(loggregator_server, source_type, source_id = nil)
       host, port = loggregator_server.split(":")
       raise RuntimeError, "Must provide valid loggregator server: #{loggregator_server}" if (host == nil || port == nil)
       raise RuntimeError, "Must provide IP address for loggregator server: #{loggregator_server}" unless host.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)
@@ -11,6 +11,7 @@ module LoggregatorEmitter
 
       raise RuntimeError, "Must provide valid source type" unless valid_source_type?(source_type)
       @source_type = source_type
+      @source_id = source_id && source_id.to_s
     end
 
     def emit(app_id, message)
@@ -33,6 +34,7 @@ module LoggregatorEmitter
       lm.time = Time.now
       lm.message = message
       lm.app_id = app_id
+      lm.source_id = @source_id
       lm.source_type = @source_type
       lm.message_type = type
       lm

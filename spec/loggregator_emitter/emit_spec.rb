@@ -4,7 +4,6 @@ require 'loggregator_emitter/emit'
 describe LoggregatorEmitter do
 
   describe 'configuring emitter' do
-
     it 'can be configured' do
       expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::DEA) }.not_to raise_error
     end
@@ -32,7 +31,7 @@ describe LoggregatorEmitter do
 
   describe 'Sending To STDOUT' do
     before(:each) do
-      @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER)
+      @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER, 42)
     end
 
     it 'successfully writes protobuffer to a socket' do
@@ -52,8 +51,8 @@ describe LoggregatorEmitter do
       expect(message.message).to eq 'Hello there!'
       expect(message.app_id).to eq "my_app_id"
       expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
+      expect(message.source_id).to eq "42"
       expect(message.message_type).to eq LogMessage::MessageType::OUT
-
 
       message = messages[1]
       expect(message.message).to eq 'Hello again!'
@@ -86,6 +85,34 @@ describe LoggregatorEmitter do
 
       message = messages[1]
       expect(message.message).to eq 'Hello again!'
+    end
+  end
+
+  describe "source id" do
+    let(:emit_message) do
+      server = FakeLoggregatorServer.new(12345)
+      server.start
+
+      @emitter.emit_error("my_app_id", 'Hello there!')
+
+      server.stop(2)
+
+      server.messages[0]
+    end
+
+    it "can be nil" do
+      @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER)
+      expect(emit_message.source_id).to eq nil
+    end
+
+    it "can be passed in as a string" do
+      @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER, "some_source_id")
+      expect(emit_message.source_id).to eq "some_source_id"
+    end
+
+    it "can be passed in as an integer" do
+      @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER, 13)
+      expect(emit_message.source_id).to eq "13"
     end
   end
 end
