@@ -1,4 +1,3 @@
-require "loggregator_messages"
 require 'socket'
 
 module LoggregatorEmitter

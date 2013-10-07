@@ -1,5 +1,5 @@
 require 'support/fake_loggregator_server'
-require 'loggregator_emitter/emit'
+require 'loggregator_emitter'
 
 describe LoggregatorEmitter do
 
