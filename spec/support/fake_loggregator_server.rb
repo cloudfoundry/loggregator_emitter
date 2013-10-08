@@ -28,7 +28,7 @@ class FakeLoggregatorServer
     end
   end
 
-  def stop(number_expected_messages)
+  def wait_for_messages_and_stop(number_expected_messages)
     max_tries = 0
     while messages.length < number_expected_messages
       sleep 0.2

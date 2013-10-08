@@ -2,89 +2,81 @@ require 'support/fake_loggregator_server'
 require 'loggregator_emitter'
 
 describe LoggregatorEmitter do
-
   describe 'configuring emitter' do
-    it 'can be configured' do
-      expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::DEA) }.not_to raise_error
+    describe "valid configurations" do
+      it 'is valid with IP and proper source type' do
+        expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::DEA) }.not_to raise_error
+      end
+
+      it 'is valid with resolveable hostname and proper source type' do
+        expect { LoggregatorEmitter::Emitter.new('localhost:12345', LogMessage::SourceType::DEA) }.not_to raise_error
+      end
+
+      it 'is valid if a server name is given' do
+        expect { LoggregatorEmitter::Emitter.new('some-unknown-address:12345', LogMessage::SourceType::DEA) }.not_to raise_error
+      end
     end
 
-    it 'raises if loggregator_server is invalid' do
-      expect { LoggregatorEmitter::Emitter.new('0.0.0.0', LogMessage::SourceType::DEA) }.to raise_error(RuntimeError)
-    end
+    describe "invalid configurations" do
+      describe "error based on loggregator_server" do
+        it 'raises if host has protocol' do
+          expect { LoggregatorEmitter::Emitter.new('http://0.0.0.0:12345', LogMessage::SourceType::DEA) }.to raise_error(ArgumentError)
+        end
+      end
 
-    it 'doesnt raise if source_type is valid' do
-      expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::DEA) }.not_to raise_error
-    end
-
-    it 'raises if source_type is invalid' do
-      expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', 40) }.to raise_error(RuntimeError)
-    end
-
-    it 'raises if host is not ip is invalid' do
-      expect { LoggregatorEmitter::Emitter.new('localhost:12345', 40) }.to raise_error(RuntimeError)
-    end
-
-    it 'raises if host has protocol' do
-      expect { LoggregatorEmitter::Emitter.new('http://0.0.0.0:12345', 40) }.to raise_error(RuntimeError)
-    end
-  end
-
-  describe 'Sending To STDOUT' do
-    before(:each) do
-      @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER, 42)
-    end
-
-    it 'successfully writes protobuffer to a socket' do
-      server = FakeLoggregatorServer.new(12345)
-      server.start
-
-      @emitter.emit("my_app_id", 'Hello there!')
-      @emitter.emit("my_app_id", 'Hello again!')
-      @emitter.emit(nil, 'Hello again!')
-
-      server.stop(2)
-
-      messages = server.messages
-
-      expect(messages.length).to eq 2
-      message = messages[0]
-      expect(message.message).to eq 'Hello there!'
-      expect(message.app_id).to eq "my_app_id"
-      expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
-      expect(message.source_id).to eq "42"
-      expect(message.message_type).to eq LogMessage::MessageType::OUT
-
-      message = messages[1]
-      expect(message.message).to eq 'Hello again!'
+      describe "error based on source_type" do
+        it 'raises if source_type is invalid' do
+          expect { LoggregatorEmitter::Emitter.new('0.0.0.0:12345', 40) }.to raise_error(ArgumentError)
+        end
+      end
     end
   end
 
-  describe 'Sending To STDOUT' do
-    before(:each) do
-      @emitter = LoggregatorEmitter::Emitter.new('0.0.0.0:12345', LogMessage::SourceType::CLOUD_CONTROLLER)
-    end
+  # describe "#emit"
+  # describe "#emit_error"
+  {"emit" => LogMessage::MessageType::OUT, "emit_error" => LogMessage::MessageType::ERR}.each do |method, message_type|
+    describe "##{method}" do
+      def make_emitter(host)
+        LoggregatorEmitter::Emitter.new("#{host}:12345", LogMessage::SourceType::CLOUD_CONTROLLER, 42)
+      end
 
-    it 'successfully writes protobuffer to a socket' do
-      server = FakeLoggregatorServer.new(12345)
-      server.start
+      before do
+        @server = FakeLoggregatorServer.new(12345)
+        @server.start
+      end
 
-      @emitter.emit_error("my_app_id", 'Hello there!')
-      @emitter.emit_error("my_app_id", 'Hello again!')
-      @emitter.emit_error(nil, 'Hello again!')
+      it 'successfully writes protobuffers to a socket' do
+        emitter = make_emitter("0.0.0.0")
+        emitter.send(method, "my_app_id", 'Hello there!')
+        emitter.send(method, "my_app_id", 'Hello again!')
+        emitter.send(method, nil, 'Hello again!')
 
-      server.stop(2)
+        @server.wait_for_messages_and_stop(2)
 
-      messages = server.messages
+        messages = @server.messages
 
-      expect(messages.length).to eq 2
-      message = messages[0]
-      expect(message.message).to eq 'Hello there!'
-      expect(message.app_id).to eq "my_app_id"
-      expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
-      expect(message.message_type).to eq LogMessage::MessageType::ERR
+        expect(messages.length).to eq 2
+        message = messages[0]
+        expect(message.message).to eq 'Hello there!'
+        expect(message.app_id).to eq "my_app_id"
+        expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
+        expect(message.source_id).to eq "42"
+        expect(message.message_type).to eq message_type
 
-      message = messages[1]
-      expect(message.message).to eq 'Hello again!'
+        message = messages[1]
+        expect(message.message).to eq 'Hello again!'
+      end
+
+      it "successfully writes protobuffers using a dns name for the loggregator server" do
+        emitter = make_emitter("localhost")
+        emitter.send(method, "my_app_id", 'Hello there!')
+
+        @server.wait_for_messages_and_stop(1)
+
+        messages = @server.messages
+        expect(messages.length).to eq 1
+        expect(messages[0].message).to eq 'Hello there!'
+      end
     end
   end
 
@@ -95,7 +87,7 @@ describe LoggregatorEmitter do
 
       @emitter.emit_error("my_app_id", 'Hello there!')
 
-      server.stop(2)
+      server.wait_for_messages_and_stop(2)
 
       server.messages[0]
     end
