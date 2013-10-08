@@ -43,7 +43,7 @@ describe LoggregatorEmitter do
   end
 
   {"emit" => LogMessage::MessageType::OUT, "emit_error" => LogMessage::MessageType::ERR}.each do |emit_method, message_type|
-    describe "#emit" do
+    describe "##{emit_method}" do
       def make_emitter(host)
         LoggregatorEmitter::Emitter.new("#{host}:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 42)
       end
