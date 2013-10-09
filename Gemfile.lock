@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    loggregator_emitter (0.0.14.pre)
+    loggregator_emitter (0.0.15.pre)
       beefcake (~> 0.3.7)
 
 GEM
