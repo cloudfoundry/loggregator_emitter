@@ -47,7 +47,7 @@ module LoggregatorEmitter
       result = lm.encode.buf
       result.unpack("C*")
 
-      s.sendmsg_nonblock(result, 0, Socket.sockaddr_in(@port, @host))
+      s.sendmsg_nonblock(result, 0, Addrinfo.udp(@host, @port))
     end
 
     def valid_source_type?(source_type)
