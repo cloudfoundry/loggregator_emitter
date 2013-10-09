@@ -5,8 +5,8 @@ module LoggregatorEmitter
     def initialize(loggregator_server, source_type, source_id = nil)
       raise ArgumentError, "Must provide valid source type" unless valid_source_type?(source_type)
 
-      @host, @port = loggregator_server.split(":")
-      raise ArgumentError, "Must provide valid loggregator server: #{loggregator_server}" if (@host == nil || @port == nil || !@port.match(/^\d+$/))
+      @host, @port = loggregator_server.split(/:([^:]*$)/)
+      raise ArgumentError, "Must provide valid loggregator server: #{loggregator_server}" if !valid_hostname || !valid_port
 
       @source_type = source_type
       @source_id = source_id && source_id.to_s
@@ -21,6 +21,14 @@ module LoggregatorEmitter
     end
 
     private
+
+    def valid_port
+      @port && @port.match(/^\d+$/)
+    end
+
+    def valid_hostname
+      @host && !@host.match(/:\/\//)
+    end
 
     def emit_message(app_id, message, type)
       if app_id
@@ -41,13 +49,13 @@ module LoggregatorEmitter
     end
 
     def send_message(lm)
-      s = UDPSocket.new
-      s.do_not_reverse_lookup = true
-
       result = lm.encode.buf
       result.unpack("C*")
 
-      s.sendmsg_nonblock(result, 0, Addrinfo.udp(@host, @port))
+      addrinfo_udp = Addrinfo.udp(@host, @port)
+      s = addrinfo_udp.ipv4?() ? UDPSocket.new : UDPSocket.new(Socket::AF_INET6)
+      s.do_not_reverse_lookup = true
+      s.sendmsg_nonblock(result, 0, addrinfo_udp)
     end
 
     def valid_source_type?(source_type)

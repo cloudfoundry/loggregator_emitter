@@ -53,7 +53,7 @@ describe LoggregatorEmitter do
         @server.start
       end
 
-      it "successfully writes protobuffers to a socket" do
+      it "successfully writes protobuffers using ipv4" do
         emitter = make_emitter("0.0.0.0")
         emitter.send(emit_method, "my_app_id", "Hello there!")
         emitter.send(emit_method, "my_app_id", "Hello again!")
@@ -75,7 +75,18 @@ describe LoggregatorEmitter do
         expect(message.message).to eq "Hello again!"
       end
 
-      it "successfully writes protobuffers using a dns name for the loggregator server" do
+      it "successfully writes protobuffers using ipv6" do
+        emitter = make_emitter("::1")
+        emitter.send(emit_method, "my_app_id", "Hello there!")
+
+        @server.wait_for_messages_and_stop(1)
+
+        messages = @server.messages
+        expect(messages.length).to eq 1
+        expect(messages[0].message).to eq "Hello there!"
+      end
+
+      it "successfully writes protobuffers using a dns name" do
         emitter = make_emitter("localhost")
         emitter.send(emit_method, "my_app_id", "Hello there!")
 
