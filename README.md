@@ -35,3 +35,6 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
 
     emitter.emit_error(app_guid,error_message) # Emits messages with a message type of ERR
 
+### Versioning
+
+This gem is versioned using [semantic versioning](http://semver.org/).
