@@ -53,13 +53,17 @@ describe LoggregatorEmitter do
         @server.start
       end
 
+      after do
+        @server.stop
+      end
+
       it "successfully writes protobuffers using ipv4" do
         emitter = make_emitter("0.0.0.0")
         emitter.send(emit_method, "my_app_id", "Hello there!")
         emitter.send(emit_method, "my_app_id", "Hello again!")
         emitter.send(emit_method, nil, "Hello again!")
 
-        @server.wait_for_messages_and_stop(2)
+        @server.wait_for_messages(2)
 
         messages = @server.messages
 
@@ -79,7 +83,7 @@ describe LoggregatorEmitter do
         emitter = make_emitter("::1")
         emitter.send(emit_method, "my_app_id", "Hello there!")
 
-        @server.wait_for_messages_and_stop(1)
+        @server.wait_for_messages(1)
 
         messages = @server.messages
         expect(messages.length).to eq 1
@@ -90,25 +94,43 @@ describe LoggregatorEmitter do
         emitter = make_emitter("localhost")
         emitter.send(emit_method, "my_app_id", "Hello there!")
 
-        @server.wait_for_messages_and_stop(1)
+        @server.wait_for_messages(1)
 
         messages = @server.messages
         expect(messages.length).to eq 1
         expect(messages[0].message).to eq "Hello there!"
       end
+
+      it "swallows empty messages" do
+        emitter = make_emitter("localhost")
+        emitter.send(emit_method, "my_app_id", nil)
+        emitter.send(emit_method, "my_app_id", "")
+        emitter.send(emit_method, "my_app_id", "   ")
+
+        sleep 0.5
+
+        messages = @server.messages
+        expect(messages.length).to eq 0
+      end
     end
   end
 
   describe "source id" do
+    before do
+      @server = FakeLoggregatorServer.new(free_port)
+      @server.start
+    end
+
+    after do
+      @server.stop
+    end
+
     let(:emit_message) do
-      server = FakeLoggregatorServer.new(free_port)
-      server.start
+       @emitter.emit_error("my_app_id", "Hello there!")
 
-      @emitter.emit_error("my_app_id", "Hello there!")
+      @server.wait_for_messages(2)
 
-      server.wait_for_messages_and_stop(2)
-
-      server.messages[0]
+      @server.messages[0]
     end
 
     it "can be nil" do

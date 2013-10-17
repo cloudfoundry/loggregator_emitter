@@ -19,14 +19,16 @@ class FakeLoggregatorServer
     bind_and_record(0, @sockets[1], "::1")
   end
 
-  def wait_for_messages_and_stop(number_expected_messages)
+  def wait_for_messages(number_expected_messages)
     max_tries = 0
     while messages.length < number_expected_messages
       sleep 0.2
       max_tries += 1
       break if max_tries > 10
     end
+  end
 
+  def stop
     @sockets.each { |socket| socket.close}
     @threads.each { |thread| Thread.kill(thread) }
   end

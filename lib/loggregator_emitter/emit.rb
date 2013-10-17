@@ -31,10 +31,10 @@ module LoggregatorEmitter
     end
 
     def emit_message(app_id, message, type)
-      if app_id
-        lm = create_log_message(app_id, message, type)
-        send_message(lm)
-      end
+      return unless app_id && message && message.strip.length > 0
+
+      lm = create_log_message(app_id, message, type)
+      send_message(lm)
     end
 
     def create_log_message(app_id, message, type)
