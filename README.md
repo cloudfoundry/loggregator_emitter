@@ -15,6 +15,7 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
  	LogMessage::SourceType::UAA
  	LogMessage::SourceType::DEA
  	LogMessage::SourceType::WARDEN_CONTAINER
+ 	LogMessage::SourceType::LOGGREGATOR
 
 ### Setup
 

@@ -15,6 +15,7 @@ class LogMessage
     UAA = 3
     DEA = 4
     WARDEN_CONTAINER = 5
+    LOGGREGATOR = 6
   end
 
   required :message, :bytes, 1
