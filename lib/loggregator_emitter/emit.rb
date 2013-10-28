@@ -2,12 +2,13 @@ require 'socket'
 
 module LoggregatorEmitter
   class Emitter
-    def initialize(loggregator_server, source_type, source_id = nil)
+    def initialize(loggregator_server, source_type, source_id = nil, secret=nil)
       raise ArgumentError, "Must provide valid source type" unless valid_source_type?(source_type)
 
       @host, @port = loggregator_server.split(/:([^:]*$)/)
       raise ArgumentError, "Must provide valid loggregator server: #{loggregator_server}" if !valid_hostname || !valid_port
 
+      @secret = secret
       @source_type = source_type
       @source_id = source_id && source_id.to_s
     end
@@ -33,8 +34,12 @@ module LoggregatorEmitter
     def emit_message(app_id, message, type)
       return unless app_id && message && message.strip.length > 0
 
-      lm = create_log_message(app_id, message, type)
-      send_message(lm)
+      if @secret.nil? || @secret.empty?
+        send_protobuffer(create_log_message(app_id, message, type))
+      else
+        send_protobuffer(create_log_envelope(app_id, message, type))
+      end
+
     end
 
     def create_log_message(app_id, message, type)
@@ -48,7 +53,17 @@ module LoggregatorEmitter
       lm
     end
 
-    def send_message(lm)
+    def create_log_envelope(app_id, message, type)
+      crypter = Encryption::Symmetric.new
+      le = LogEnvelope.new()
+      le.routing_key = app_id
+      le.log_message = create_log_message(app_id, message, type)
+      digest = crypter.digest(le.log_message.message)
+      le.signature = crypter.encrypt(@secret, digest)
+      le
+    end
+
+    def send_protobuffer(lm)
       result = lm.encode.buf
       result.unpack("C*")
 
