@@ -5,12 +5,13 @@ module LoggregatorEmitter
     MAX_MESSAGE_BYTE_SIZE = (9 * 1024) - 512
     TRUNCATED_STRING = "TRUNCATED"
 
-    def initialize(loggregator_server, source_type, source_id = nil)
+    def initialize(loggregator_server, source_type, source_id = nil, secret=nil)
       raise ArgumentError, "Must provide valid source type" unless valid_source_type?(source_type)
 
       @host, @port = loggregator_server.split(/:([^:]*$)/)
       raise ArgumentError, "Must provide valid loggregator server: #{loggregator_server}" if !valid_hostname || !valid_port
 
+      @secret = secret
       @source_type = source_type
       @source_id = source_id && source_id.to_s
     end
@@ -41,8 +42,11 @@ module LoggregatorEmitter
           m = m.byteslice(0, MAX_MESSAGE_BYTE_SIZE-TRUNCATED_STRING.bytesize) + TRUNCATED_STRING
         end
 
-        lm = create_log_message(app_id, m, type)
-        send_message(lm)
+        if @secret.nil? || @secret.empty?
+          send_protobuffer(create_log_message(app_id, m, type))
+        else
+          send_protobuffer(create_log_envelope(app_id, m, type))
+	    end
       end
     end
 
@@ -57,7 +61,17 @@ module LoggregatorEmitter
       lm
     end
 
-    def send_message(lm)
+    def create_log_envelope(app_id, message, type)
+      crypter = Encryption::Symmetric.new
+      le = LogEnvelope.new()
+      le.routing_key = app_id
+      le.log_message = create_log_message(app_id, message, type)
+      digest = crypter.digest(le.log_message.message)
+      le.signature = crypter.encrypt(@secret, digest)
+      le
+    end
+
+    def send_protobuffer(lm)
       result = lm.encode.buf
       result.unpack("C*")
 

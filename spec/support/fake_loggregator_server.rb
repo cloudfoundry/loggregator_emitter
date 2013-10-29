@@ -29,7 +29,7 @@ class FakeLoggregatorServer
   end
 
   def stop
-    @sockets.each { |socket| socket.close}
+    @sockets.each { |socket| socket.close }
     @threads.each { |thread| Thread.kill(thread) }
   end
 
@@ -42,10 +42,16 @@ class FakeLoggregatorServer
       while true
         begin
           stuff = socket.recv(65536)
-          messages << LogMessage.decode(stuff)
+          decoded_data = LogMessage.decode(stuff.dup)
+          messages << decoded_data
         rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError => e
-          puts "ERROR"
-          puts e
+          begin
+            decoded_data = LogEnvelope.decode(stuff.dup)
+            messages << decoded_data
+          rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError => e
+            puts "ERROR: neither envelope nor message extraction worked"
+            puts e
+          end
         end
       end
     end
