@@ -2,6 +2,9 @@ require 'socket'
 
 module LoggregatorEmitter
   class Emitter
+    MAX_MESSAGE_BYTE_SIZE = (9 * 1024) - 512
+    TRUNCATED_STRING = "TRUNCATED"
+
     def initialize(loggregator_server, source_type, source_id = nil)
       raise ArgumentError, "Must provide valid source type" unless valid_source_type?(source_type)
 
@@ -32,6 +35,10 @@ module LoggregatorEmitter
 
     def emit_message(app_id, message, type)
       return unless app_id && message && message.strip.length > 0
+
+      if message.bytesize > MAX_MESSAGE_BYTE_SIZE
+        message = message.byteslice(0, MAX_MESSAGE_BYTE_SIZE-TRUNCATED_STRING.bytesize) + TRUNCATED_STRING
+      end
 
       lm = create_log_message(app_id, message, type)
       send_message(lm)

@@ -112,6 +112,19 @@ describe LoggregatorEmitter do
         messages = @server.messages
         expect(messages.length).to eq 0
       end
+
+      it "truncates large messages" do
+        emitter = make_emitter("localhost")
+        message = (124*1024).times.collect { "a" }.join("")
+        emitter.send(emit_method, "my_app_id", message)
+        messages = @server.messages
+
+        sleep 0.5
+
+        expect(messages.length).to eq 1
+        expect(messages[0].message.bytesize <= LoggregatorEmitter::Emitter::MAX_MESSAGE_BYTE_SIZE).to be_true
+        expect(messages[0].message.slice(-9..-1)).to eq("TRUNCATED")
+      end
     end
   end
 
