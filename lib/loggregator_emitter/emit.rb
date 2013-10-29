@@ -36,12 +36,14 @@ module LoggregatorEmitter
     def emit_message(app_id, message, type)
       return unless app_id && message && message.strip.length > 0
 
-      if message.bytesize > MAX_MESSAGE_BYTE_SIZE
-        message = message.byteslice(0, MAX_MESSAGE_BYTE_SIZE-TRUNCATED_STRING.bytesize) + TRUNCATED_STRING
-      end
+      message.split(/\r\n|\n\r|\n|\r/).each do |m|
+        if m.bytesize > MAX_MESSAGE_BYTE_SIZE
+          m = m.byteslice(0, MAX_MESSAGE_BYTE_SIZE-TRUNCATED_STRING.bytesize) + TRUNCATED_STRING
+        end
 
-      lm = create_log_message(app_id, message, type)
-      send_message(lm)
+        lm = create_log_message(app_id, m, type)
+        send_message(lm)
+      end
     end
 
     def create_log_message(app_id, message, type)
