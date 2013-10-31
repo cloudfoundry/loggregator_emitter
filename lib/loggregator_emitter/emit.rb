@@ -6,8 +6,6 @@ module LoggregatorEmitter
     TRUNCATED_STRING = "TRUNCATED"
 
     def initialize(loggregator_server, source_type, source_id = nil, secret=nil)
-      raise ArgumentError, "Must provide valid source type" unless valid_source_type?(source_type)
-
       @host, @port = loggregator_server.split(/:([^:]*$)/)
       raise ArgumentError, "Must provide valid loggregator server: #{loggregator_server}" if !valid_hostname || !valid_port
 
@@ -79,15 +77,6 @@ module LoggregatorEmitter
       s = addrinfo_udp.ipv4?() ? UDPSocket.new : UDPSocket.new(Socket::AF_INET6)
       s.do_not_reverse_lookup = true
       s.sendmsg_nonblock(result, 0, addrinfo_udp)
-    end
-
-    def valid_source_type?(source_type)
-      LogMessage::SourceType.constants.each do |name|
-        if LogMessage::SourceType.const_get(name) == source_type
-          return true
-        end
-      end
-      false
     end
   end
 end

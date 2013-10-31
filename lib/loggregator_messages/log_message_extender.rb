@@ -3,14 +3,6 @@ class LogMessage
     {MessageType::OUT => 'STDOUT', MessageType::ERR => 'STDERR'}[message_type]
   end
 
-  def source_type_name
-    {SourceType::CLOUD_CONTROLLER => 'CF[CC]',
-     SourceType::ROUTER => 'CF[Router]',
-     SourceType::UAA => 'CF[UAA]',
-     SourceType::DEA => 'CF[DEA]',
-     SourceType::WARDEN_CONTAINER => 'App',}[source_type]
-  end
-
   def time=(time)
     self.timestamp = (time.tv_sec * 1000000000) + time.tv_nsec
   end

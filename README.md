@@ -8,15 +8,6 @@ Create an emitter object with the loggregator router host and port, and source t
 
 Call emit() or emit_error() on this emitter with the application GUID and the message string.
 
-### Valid source types are:
-
- 	LogMessage::SourceType::CLOUD_CONTROLLER
- 	LogMessage::SourceType::ROUTER
- 	LogMessage::SourceType::UAA
- 	LogMessage::SourceType::DEA
- 	LogMessage::SourceType::WARDEN_CONTAINER
- 	LogMessage::SourceType::LOGGREGATOR
-
 ### Setup
 
     Add the loggregator_emitter gem to your gemfile.
@@ -34,6 +25,9 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
     emitter.emit(app_guid,message) # Emits messages with a message type of OUT
 
     emitter.emit_error(app_guid,error_message) # Emits messages with a message type of ERR
+
+### Regenerating Protobuf library
+    protoc --beefcake_out lib/loggregator_messages -I lib/loggregator_messages lib/loggregator_messages/log_message.proto
 
 ### Versioning
 
