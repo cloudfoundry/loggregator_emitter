@@ -53,9 +53,9 @@ end
 
 describe LoggregatorEmitter do
   @fixtures = []
-  @fixtures << MessageFixture.new("long_message", (124*1024).times.collect { "a" }.join(""), 0.3, 0.5)
-  @fixtures << MessageFixture.new("message with newlines", 10.times.collect { (6*1024).times.collect { "a" }.join("") + "\n" }.join(""), 1.0, 1.0)
-  @fixtures << MessageFixture.new("message worst case", (124*1024).times.collect { "a" }.join("") + "\n", 0.5, 1.0)
+  @fixtures << MessageFixture.new("long_message", (124*1024).times.collect { "a" }.join(""), 2.0, 1.0)
+  @fixtures << MessageFixture.new("message with newlines", 10.times.collect { (6*1024).times.collect { "a" }.join("") + "\n" }.join(""), 3.0, 2.0)
+  @fixtures << MessageFixture.new("message worst case", (124*1024).times.collect { "a" }.join("") + "\n", 2.0, 1.0)
 
   [true, false].each do |using_server|
     @fixtures.each do |fixture|
