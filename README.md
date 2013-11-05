@@ -4,9 +4,18 @@
 
 This gem provides an API to emit messages to the loggregator agent from Ruby applications.
 
-Create an emitter object with the loggregator router host and port, and source type of the emitter.
+Create an emitter object with the loggregator router host and port, a source name of the emitter, and a shared secret (for signing).
 
 Call emit() or emit_error() on this emitter with the application GUID and the message string.
+
+##### A valid source name is any 3 character string.   Some common component sources are:
+
+ 	API (Cloud Controller)
+ 	RTR (Go Router)
+ 	UAA
+ 	DEA
+ 	APP (Warden container)
+ 	LGR (Loggregator)
 
 ### Setup
 
@@ -18,7 +27,7 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
 
     require "loggregator_emitter"
 
-    emitter = LoggregatorEmitter::Emitter.new("10.10.10.16:38452", LogMessage::SourceType::CLOUD_CONTROLLER)
+    emitter = LoggregatorEmitter::Emitter.new("10.10.10.16:38452", "API")
 
     app_guid = "a8977cb6-3365-4be1-907e-0c878b3a4c6b" # The GUID(UUID) for the user's application
 
