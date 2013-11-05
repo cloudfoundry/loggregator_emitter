@@ -5,12 +5,33 @@ module LoggregatorEmitter
     MAX_MESSAGE_BYTE_SIZE = (9 * 1024) - 512
     TRUNCATED_STRING = "TRUNCATED"
 
-    def initialize(loggregator_server, source_type, source_id = nil, secret=nil)
+    SOURCE_TYPE_BY_ID = {
+          1 => "CLOUD_CONTROLLER",
+          2 => "ROUTER",
+          3 => "UAA",
+          4 => "DEA",
+          5 => "WARDEN_CONTAINER",
+          6 => "LOGGREGATOR",
+    }
+
+    def initialize(loggregator_server, source_type_or_name, source_id = nil, secret=nil)
       @host, @port = loggregator_server.split(/:([^:]*$)/)
       raise ArgumentError, "Must provide valid loggregator server: #{loggregator_server}" if !valid_hostname || !valid_port
+      raise ArgumentError, "Must provide valid source_type_or_name: #{source_type_or_name}" unless source_type_or_name
+
+      case source_type_or_name
+        when LogMessage::SourceType::CLOUD_CONTROLLER..LogMessage::SourceType::LOGGREGATOR
+          @source_type = source_type_or_name
+          @source_name = SOURCE_TYPE_BY_ID[source_type_or_name]
+        when String
+          raise ArgumentError, "Custom Source String must be 3 characters" unless source_type_or_name.size == 3
+          @source_type = LogMessage::SourceType::UNKNOWN
+          @source_name = source_type_or_name
+        else
+          raise ArgumentError, "Invalid source: #{source_type_or_name.inspect}  Please use a string or a known source type constant"
+      end
 
       @secret = secret
-      @source_type = source_type
       @source_id = source_id && source_id.to_s
     end
 
@@ -59,6 +80,7 @@ module LoggregatorEmitter
       lm.app_id = app_id
       lm.source_id = @source_id
       lm.source_type = @source_type
+      lm.source_name = @source_name
       lm.message_type = type
       lm
     end

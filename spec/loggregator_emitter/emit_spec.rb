@@ -15,22 +15,43 @@ describe LoggregatorEmitter do
   describe "configuring emitter" do
     describe "valid configurations" do
       it "is valid with IP and proper source type" do
-        expect { LoggregatorEmitter::Emitter.new("0.0.0.0:12345", "DEA") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("0.0.0.0:12345", LogMessage::SourceType::DEA) }.not_to raise_error
       end
 
       it "is valid with resolveable hostname and proper source type" do
-        expect { LoggregatorEmitter::Emitter.new("localhost:12345", "DEA") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("localhost:12345", LogMessage::SourceType::DEA) }.not_to raise_error
       end
 
       it "is valid if a server name is given" do
-        expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", "DEA") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", LogMessage::SourceType::DEA) }.not_to raise_error
+      end
+
+      it "accepts a string as source type/name" do
+        expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", "STG") }.not_to raise_error
       end
     end
 
     describe "invalid configurations" do
       describe "error based on loggregator_server" do
         it "raises if host has protocol" do
-          expect { LoggregatorEmitter::Emitter.new("http://0.0.0.0:12345", "DEA") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("http://0.0.0.0:12345", LogMessage::SourceType::DEA) }.to raise_error(ArgumentError)
+        end
+
+        it "raises if source is an unknown integer" do
+          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", 7) }.to raise_error(ArgumentError)
+        end
+
+        it "raises if source is not an integer or string" do
+          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", nil) }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", 12.0) }.to raise_error(ArgumentError)
+        end
+
+        it "raises if source is too large of a string" do
+          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", "ABCD") }.to raise_error(ArgumentError)
+        end
+
+        it "raises if source is too small of a string" do
+          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", "AB") }.to raise_error(ArgumentError)
         end
       end
     end
@@ -39,7 +60,7 @@ describe LoggregatorEmitter do
 
   describe "emit_log_envelope" do
     def make_emitter(host)
-      LoggregatorEmitter::Emitter.new("#{host}:#{free_port}", "API", 42, "secret")
+      LoggregatorEmitter::Emitter.new("#{host}:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 42, "secret")
     end
 
     before do
@@ -69,7 +90,7 @@ describe LoggregatorEmitter do
 
       expect(message.log_message.message).to eq "Hello there!"
       expect(message.log_message.app_id).to eq "my_app_id"
-      expect(message.log_message.source_type).to eq "API"
+      expect(message.log_message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
       expect(message.log_message.source_id).to eq "42"
       expect(message.log_message.message_type).to eq LogMessage::MessageType::OUT
     end
@@ -93,7 +114,7 @@ describe LoggregatorEmitter do
   {"emit" => LogMessage::MessageType::OUT, "emit_error" => LogMessage::MessageType::ERR}.each do |emit_method, message_type|
     describe "##{emit_method}" do
       def make_emitter(host)
-        LoggregatorEmitter::Emitter.new("#{host}:#{free_port}", "API", 42)
+        LoggregatorEmitter::Emitter.new("#{host}:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 42)
       end
 
       before do
@@ -119,7 +140,7 @@ describe LoggregatorEmitter do
         message = messages[0]
         expect(message.message).to eq "Hello there!"
         expect(message.app_id).to eq "my_app_id"
-        expect(message.source_type).to eq "API"
+        expect(message.source_type).to eq LogMessage::SourceType::CLOUD_CONTROLLER
         expect(message.source_id).to eq "42"
         expect(message.message_type).to eq message_type
 
@@ -186,7 +207,7 @@ describe LoggregatorEmitter do
     end
   end
 
-  describe "source id" do
+  describe "source" do
     before do
       @server = FakeLoggregatorServer.new(free_port)
       @server.start
@@ -204,18 +225,29 @@ describe LoggregatorEmitter do
       @server.messages[0]
     end
 
-    it "can be nil" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", "API")
+    it "when type is known" do
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER)
+      expect(emit_message.source_name).to eq "CLOUD_CONTROLLER"
+    end
+
+    it "when type is unknown" do
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", "STG")
+      expect(emit_message.source_name).to eq "STG"
+      expect(emit_message.source_type).to eq LogMessage::SourceType::UNKNOWN
+    end
+
+    it "id can be nil" do
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER)
       expect(emit_message.source_id).to eq nil
     end
 
-    it "can be passed in as a string" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", "API", "some_source_id")
+    it "id can be passed in as a string" do
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, "some_source_id")
       expect(emit_message.source_id).to eq "some_source_id"
     end
 
-    it "can be passed in as an integer" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", "API", 13)
+    it "id can be passed in as an integer" do
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 13)
       expect(emit_message.source_id).to eq "13"
     end
   end
