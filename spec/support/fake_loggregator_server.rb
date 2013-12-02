@@ -7,10 +7,6 @@ class FakeLoggregatorServer
 
   def initialize(port)
 
-    puts "#################################################"
-    puts `netstat -an`
-    puts "#################################################"
-
     @messages = []
     @port = port
 
@@ -20,8 +16,14 @@ class FakeLoggregatorServer
   end
 
   def start
+    puts "#################################################"
+    puts `netstat -an`
+    puts "#################################################"
     bind_and_record(0, @sockets[0], "0.0.0.0")
     bind_and_record(0, @sockets[1], "::")
+    puts "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+    puts `netstat -an`
+    puts "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
   end
 
   def wait_for_messages(number_expected_messages)
