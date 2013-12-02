@@ -17,16 +17,16 @@ class MessageFixture
 end
 
 shared_examples "a performance test" do |fixture, using_server|
-  let(:free_port) { FreePort.next_free_port }
   let(:iterations) { using_server ? 100 : 1000 }
-  subject(:emitter) { LoggregatorEmitter::Emitter.new("localhost:#{free_port}", "API", 42, "my-secret") }
 
   before do
+    @free_port = FreePort.next_free_port
+    @emitter = LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "API", 42, "my-secret")
     if using_server
-      @server = FakeLoggregatorServer.new(free_port)
+      @server = FakeLoggregatorServer.new(@free_port)
       @server.start
     else
-      emitter.should_receive(:send_protobuffer).at_least(iterations).times
+      @emitter.should_receive(:send_protobuffer).at_least(iterations).times
     end
   end
 
@@ -37,7 +37,7 @@ shared_examples "a performance test" do |fixture, using_server|
   it "emits #{fixture.name} within a time threshold #{using_server ? 'with' : 'without'} server" do
     start_time = Time.now.to_f
 
-    iterations.times { emitter.emit("my_app_id", fixture.message) }
+    iterations.times { @emitter.emit("my_app_id", fixture.message) }
 
     expect(Time.now.to_f - start_time).to be < fixture.expected(using_server)
   end

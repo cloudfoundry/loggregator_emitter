@@ -3,10 +3,6 @@ require "loggregator_emitter"
 
 describe LoggregatorEmitter do
 
-  let(:free_port) do
-    FreePort.next_free_port
-  end
-
   describe "configuring emitter" do
     describe "valid configurations" do
       it "is valid with IP and proper source type" do
@@ -59,11 +55,12 @@ describe LoggregatorEmitter do
 
   describe "emit_log_envelope" do
     def make_emitter(host)
-      LoggregatorEmitter::Emitter.new("#{host}:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 42, "secret")
+      LoggregatorEmitter::Emitter.new("#{host}:#{@free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 42, "secret")
     end
 
     before do
-      @server = FakeLoggregatorServer.new(free_port)
+      @free_port = FreePort.next_free_port
+      @server = FakeLoggregatorServer.new(@free_port)
       @server.start
     end
 
@@ -113,11 +110,12 @@ describe LoggregatorEmitter do
   {"emit" => LogMessage::MessageType::OUT, "emit_error" => LogMessage::MessageType::ERR}.each do |emit_method, message_type|
     describe "##{emit_method}" do
       def make_emitter(host)
-        LoggregatorEmitter::Emitter.new("#{host}:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 42)
+        LoggregatorEmitter::Emitter.new("#{host}:#{@free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 42)
       end
 
       before do
-        @server = FakeLoggregatorServer.new(free_port)
+        @free_port = FreePort.next_free_port
+        @server = FakeLoggregatorServer.new(@free_port)
         @server.start
       end
 
@@ -208,7 +206,8 @@ describe LoggregatorEmitter do
 
   describe "source" do
     before do
-      @server = FakeLoggregatorServer.new(free_port)
+      @free_port = FreePort.next_free_port
+      @server = FakeLoggregatorServer.new(@free_port)
       @server.start
     end
 
@@ -225,28 +224,28 @@ describe LoggregatorEmitter do
     end
 
     it "when type is known" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER)
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", LogMessage::SourceType::CLOUD_CONTROLLER)
       expect(emit_message.source_name).to eq "CLOUD_CONTROLLER"
     end
 
     it "when type is unknown" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", "STG")
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "STG")
       expect(emit_message.source_name).to eq "STG"
       expect(emit_message.source_type).to eq LogMessage::SourceType::UNKNOWN
     end
 
     it "id can be nil" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER)
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", LogMessage::SourceType::CLOUD_CONTROLLER)
       expect(emit_message.source_id).to eq nil
     end
 
     it "id can be passed in as a string" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, "some_source_id")
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, "some_source_id")
       expect(emit_message.source_id).to eq "some_source_id"
     end
 
     it "id can be passed in as an integer" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 13)
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 13)
       expect(emit_message.source_id).to eq "13"
     end
   end
