@@ -1,6 +1,13 @@
 require 'socket'
 require 'loggregator_messages/log_message.pb'
 
+class FreePort
+  def self.next_free_port
+    @@next_free_port ||= 12345
+    @@next_free_port += 1
+  end
+end
+
 class FakeLoggregatorServer
 
   attr_reader :messages, :port

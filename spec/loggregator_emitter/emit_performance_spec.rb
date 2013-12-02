@@ -16,13 +16,6 @@ class MessageFixture
   end
 end
 
-class FreePort
-  def self.next_free_port
-    @@next_free_port ||= 12345
-    @@next_free_port += 1
-  end
-end
-
 shared_examples "a performance test" do |fixture, using_server|
   let(:free_port) { FreePort.next_free_port }
   let(:iterations) { using_server ? 100 : 1000 }

@@ -2,12 +2,7 @@ require "support/fake_loggregator_server"
 require "loggregator_emitter"
 
 describe LoggregatorEmitter do
-  class FreePort
-    def self.next_free_port
-      @@next_free_port ||= 12345
-      @@next_free_port += 1
-    end
-  end
+
   let(:free_port) do
     FreePort.next_free_port
   end
