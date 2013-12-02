@@ -1,13 +1,6 @@
 require 'socket'
 require 'loggregator_messages/log_message.pb'
 
-class FreePort
-  def self.next_free_port
-    @@next_free_port ||= 13452
-    @@next_free_port += 1
-  end
-end
-
 class FakeLoggregatorServer
 
   attr_reader :messages, :port
@@ -38,6 +31,10 @@ class FakeLoggregatorServer
   def stop
     @sockets.each { |socket| socket.close }
     @threads.each { |thread| Thread.kill(thread) }
+  end
+
+  def reset
+    @messages = []
   end
 
   private

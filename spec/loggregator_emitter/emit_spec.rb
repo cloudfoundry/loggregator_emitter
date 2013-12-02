@@ -3,6 +3,20 @@ require "loggregator_emitter"
 
 describe LoggregatorEmitter do
 
+  before :all do
+    @free_port = 12345
+    @server = FakeLoggregatorServer.new(@free_port)
+    @server.start
+  end
+
+  after :all do
+    @server.stop
+  end
+
+  before do
+    @server.reset
+  end
+
   describe "configuring emitter" do
     describe "valid configurations" do
       it "is valid with IP and proper source type" do
@@ -58,16 +72,6 @@ describe LoggregatorEmitter do
       LoggregatorEmitter::Emitter.new("#{host}:#{@free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 42, "secret")
     end
 
-    before do
-      @free_port = FreePort.next_free_port
-      @server = FakeLoggregatorServer.new(@free_port)
-      @server.start
-    end
-
-    after do
-      @server.stop
-    end
-
     it "successfully writes envelope protobuffers" do
       emitter = make_emitter("0.0.0.0")
       emitter.emit("my_app_id", "Hello there!")
@@ -111,16 +115,6 @@ describe LoggregatorEmitter do
     describe "##{emit_method}" do
       def make_emitter(host)
         LoggregatorEmitter::Emitter.new("#{host}:#{@free_port}", LogMessage::SourceType::CLOUD_CONTROLLER, 42)
-      end
-
-      before do
-        @free_port = FreePort.next_free_port
-        @server = FakeLoggregatorServer.new(@free_port)
-        @server.start
-      end
-
-      after do
-        @server.stop
       end
 
       it "successfully writes protobuffers using ipv4" do
@@ -205,15 +199,6 @@ describe LoggregatorEmitter do
   end
 
   describe "source" do
-    before do
-      @free_port = FreePort.next_free_port
-      @server = FakeLoggregatorServer.new(@free_port)
-      @server.start
-    end
-
-    after do
-      @server.stop
-    end
 
     let(:emit_message) do
       @emitter.emit_error("my_app_id", "Hello there!")
