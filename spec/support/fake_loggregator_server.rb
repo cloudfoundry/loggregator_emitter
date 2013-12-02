@@ -6,6 +6,11 @@ class FakeLoggregatorServer
   attr_reader :messages, :port
 
   def initialize(port)
+
+    puts "#################################################"
+    puts `netstat -an`
+    puts "#################################################"
+
     @messages = []
     @port = port
 
@@ -40,7 +45,7 @@ class FakeLoggregatorServer
   private
 
   def bind_and_record(index, socket, server)
-    socket.bind(server, port)
+    socket.bind(server, @port)
 
     @threads[index] = Thread.new do
       while true
