@@ -19,21 +19,11 @@ end
 shared_examples "a performance test" do |fixture, using_server|
   let(:iterations) { using_server ? 100 : 1000 }
 
-  before :all do
-    @free_port = 12346
-    @server = FakeLoggregatorServer.new(@free_port)
-    @server.start
-  end
-
   before do
     @emitter = LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "API", 42, "my-secret")
     if !using_server
       @emitter.should_receive(:send_protobuffer).at_least(iterations).times
     end
-  end
-
-  after :all do
-    @server.stop
   end
 
   it "emits #{fixture.name} within a time threshold #{using_server ? 'with' : 'without'} server" do
@@ -51,6 +41,17 @@ describe LoggregatorEmitter do
   @fixtures << MessageFixture.new("long_message", (124*1024).times.collect { "a" }.join(""), 2.0, 2.0)
   @fixtures << MessageFixture.new("message with newlines", 10.times.collect { (6*1024).times.collect { "a" }.join("") + "\n" }.join(""), 3.0, 3.0)
   @fixtures << MessageFixture.new("message worst case", (124*1024).times.collect { "a" }.join("") + "\n", 2.0, 2.0)
+
+  before :all do
+    @free_port = 12346
+    @server = FakeLoggregatorServer.new(@free_port)
+    @server.start
+  end
+
+  after :all do
+    @server.stop
+  end
+
 
   [true, false].each do |using_server|
     @fixtures.each do |fixture|
