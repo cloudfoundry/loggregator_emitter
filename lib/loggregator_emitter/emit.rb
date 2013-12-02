@@ -58,7 +58,7 @@ module LoggregatorEmitter
     end
 
     def valid_hostname
-      @host && !@host.match(/:\/\//)
+      @host && !@host.empty? && !@host.match(/:\/\//)
     end
 
     def split_message(message)
