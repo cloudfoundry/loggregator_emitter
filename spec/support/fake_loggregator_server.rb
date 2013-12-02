@@ -16,14 +16,8 @@ class FakeLoggregatorServer
   end
 
   def start
-    puts "#################################################"
-    puts `netstat -an`
-    puts "#################################################"
-    bind_and_record(0, @sockets[0], "0.0.0.0")
-    bind_and_record(0, @sockets[1], "::")
-    puts "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
-    puts `netstat -an`
-    puts "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+    bind_and_record(0, @sockets[0], "127.0.0.1")
+    bind_and_record(0, @sockets[1], "::1")
   end
 
   def wait_for_messages(number_expected_messages)

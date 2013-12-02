@@ -39,11 +39,11 @@ describe LoggregatorEmitter do
         end
 
         it "raises if host is blank" do
-          expect { LoggregatorEmitter::Emitter.new(":12345", LogMessage::SourceType::DEA) }.to raise_error(Resolv::ResolvError)
+          expect { LoggregatorEmitter::Emitter.new(":12345", LogMessage::SourceType::DEA) }.to raise_error(ArgumentError)
         end
 
         it "raises if host is unresolvable" do
-          expect { LoggregatorEmitter::Emitter.new("i.cant.resolve.foo:12345", LogMessage::SourceType::DEA) }.to raise_error(Resolv::ResolvError)
+          expect { LoggregatorEmitter::Emitter.new("i.cant.resolve.foo:12345", LogMessage::SourceType::DEA) }.to raise_error(ArgumentError)
         end
 
         it "raises if source is an unknown integer" do
@@ -118,7 +118,7 @@ describe LoggregatorEmitter do
       end
 
       it "successfully writes protobuffers using ipv4" do
-        emitter = make_emitter("0.0.0.0")
+        emitter = make_emitter("127.0.0.1")
         emitter.send(emit_method, "my_app_id", "Hello there!")
         emitter.send(emit_method, "my_app_id", "Hello again!")
         emitter.send(emit_method, nil, "Hello again!")
