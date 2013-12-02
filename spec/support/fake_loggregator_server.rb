@@ -15,8 +15,8 @@ class FakeLoggregatorServer
   end
 
   def start
-    bind_and_record(0, @sockets[0], "localhost")
-    bind_and_record(0, @sockets[1], "::1")
+    bind_and_record(0, @sockets[0], "0.0.0.0")
+    bind_and_record(0, @sockets[1], "::")
   end
 
   def wait_for_messages(number_expected_messages)

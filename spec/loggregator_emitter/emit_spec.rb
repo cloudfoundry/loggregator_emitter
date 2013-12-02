@@ -22,12 +22,8 @@ describe LoggregatorEmitter do
         expect { LoggregatorEmitter::Emitter.new("localhost:12345", LogMessage::SourceType::DEA) }.not_to raise_error
       end
 
-      it "is valid if a server name is given" do
-        expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", LogMessage::SourceType::DEA) }.not_to raise_error
-      end
-
       it "accepts a string as source type/name" do
-        expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", "STG") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("localhost:12345", "STG") }.not_to raise_error
       end
     end
 
@@ -37,21 +33,29 @@ describe LoggregatorEmitter do
           expect { LoggregatorEmitter::Emitter.new("http://0.0.0.0:12345", LogMessage::SourceType::DEA) }.to raise_error(ArgumentError)
         end
 
+        it "raises if host is blank" do
+          expect { LoggregatorEmitter::Emitter.new(":12345", LogMessage::SourceType::DEA) }.to raise_error(Resolv::ResolvError)
+        end
+
+        it "raises if host is unresolvable" do
+          expect { LoggregatorEmitter::Emitter.new("i.cant.resolve.foo:12345", LogMessage::SourceType::DEA) }.to raise_error(Resolv::ResolvError)
+        end
+
         it "raises if source is an unknown integer" do
-          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", 7) }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", 7) }.to raise_error(ArgumentError)
         end
 
         it "raises if source is not an integer or string" do
-          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", nil) }.to raise_error(ArgumentError)
-          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", 12.0) }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", nil) }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", 12.0) }.to raise_error(ArgumentError)
         end
 
         it "raises if source is too large of a string" do
-          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", "ABCD") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "ABCD") }.to raise_error(ArgumentError)
         end
 
         it "raises if source is too small of a string" do
-          expect { LoggregatorEmitter::Emitter.new("some-unknown-address:12345", "AB") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "AB") }.to raise_error(ArgumentError)
         end
       end
     end

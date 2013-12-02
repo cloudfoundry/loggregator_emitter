@@ -1,4 +1,5 @@
 require 'socket'
+require 'resolv'
 
 module LoggregatorEmitter
   class Emitter
@@ -16,8 +17,11 @@ module LoggregatorEmitter
 
     def initialize(loggregator_server, source_type_or_name, source_id = nil, secret=nil)
       @host, @port = loggregator_server.split(/:([^:]*$)/)
+
       raise ArgumentError, "Must provide valid loggregator server: #{loggregator_server}" if !valid_hostname || !valid_port
       raise ArgumentError, "Must provide valid source_type_or_name: #{source_type_or_name}" unless source_type_or_name
+
+      @host = ::Resolv.getaddress(@host)
 
       case source_type_or_name
         when LogMessage::SourceType::CLOUD_CONTROLLER..LogMessage::SourceType::LOGGREGATOR
