@@ -8,8 +8,7 @@ describe LogMessage do
         {
           :message => "thesearebytes",
           :message_type => 1,
-          :timestamp => 3,
-          :source_type => "UAA"
+          :timestamp => 3
         })
 
       expect(msg.message_type_name).to eq("STDOUT")
@@ -20,8 +19,7 @@ describe LogMessage do
         {
           :message => "thesearebytes",
           :message_type => 2,
-          :timestamp => 3,
-          :source_type => "UAA"
+          :timestamp => 3
         })
 
       expect(msg.message_type_name).to eq("STDERR")
