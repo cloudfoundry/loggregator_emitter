@@ -3,7 +3,9 @@ notifications:
   - cf-loggregator@pivotallabs.com
 language: ruby
 rvm:
-  - 1.9.3
-  - 2.0.0
-
-script: 'bundle exec rake'
+- 1.9.3
+- 2.0.0
+script: bundle exec rake
+env:
+  global:
+    secure: SqFTUY2M1pyWzBZtQTEvkHwM+H1b8viGUlXhp3YtwqCvSLD5fO7ApsBkuH1RUHOcDZaYa4UYHvulEigIQm5woywosssuJSGdIFL48Us26gqc3iC9rGzbeCyeT0yJug7LicFPKyDpB7zHz0ma1syEquS3PR9SuiLkgIY2D4VmTHY=
