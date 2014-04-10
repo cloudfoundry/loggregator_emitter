@@ -1,2 +1,4 @@
-require 'coveralls'
-Coveralls.wear!
+unless ENV['DISABLE_COVERAGE'] == 'true'
+  require 'coveralls'
+  Coveralls.wear!
+end

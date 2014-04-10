@@ -27,7 +27,7 @@ shared_examples "a performance test" do |fixture, using_server|
     end
   end
 
-  it "emits #{fixture.name} within a time threshold #{using_server ? 'with' : 'without'} server" do
+  it "emits #{fixture.name} within a time threshold #{using_server ? 'with' : 'without'} server", performance: true do
     start_time = Time.now.to_f
 
     iterations.times { @emitter.emit("my_app_id", fixture.message) }
