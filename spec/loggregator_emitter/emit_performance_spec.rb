@@ -1,3 +1,4 @@
+require "spec_helper"
 require "support/fake_loggregator_server"
 require "loggregator_emitter"
 

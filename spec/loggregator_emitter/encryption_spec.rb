@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+require "spec_helper"
 require "loggregator_emitter"
 
 describe Encryption do
