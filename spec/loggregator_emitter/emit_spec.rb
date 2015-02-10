@@ -96,6 +96,13 @@ describe LoggregatorEmitter do
       expect(message.log_message.message_type).to eq LogMessage::MessageType::OUT
     end
 
+    it "gracefully handles failures to send messages" do
+      emitter = make_emitter("0.0.0.0")
+      UDPSocket.any_instance.stub(:sendmsg_nonblock).and_raise("Operation not permitted - sendmsg(2) (Errno::EPERM)")
+
+      expect {emitter.emit("my_app_id", "Hello there!")}.to raise_error(LoggregatorEmitter::Emitter::UDP_SEND_ERROR)
+    end
+
     it "makes the right protobuffer" do
       emitter = make_emitter("0.0.0.0")
 

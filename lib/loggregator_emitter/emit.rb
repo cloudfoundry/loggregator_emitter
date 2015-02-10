@@ -4,6 +4,8 @@ require 'resolv'
 module LoggregatorEmitter
   class Emitter
 
+    UDP_SEND_ERROR = StandardError.new("Error sending message via UDP")
+
     attr_reader :host
 
     MAX_MESSAGE_BYTE_SIZE = (9 * 1024) - 512
@@ -92,7 +94,12 @@ module LoggregatorEmitter
       addrinfo_udp = Addrinfo.udp(@host, @port)
       s = addrinfo_udp.ipv4?() ? UDPSocket.new : UDPSocket.new(Socket::AF_INET6)
       s.do_not_reverse_lookup = true
-      s.sendmsg_nonblock(result, 0, addrinfo_udp)
+
+      begin
+        s.sendmsg_nonblock(result, 0, addrinfo_udp)
+      rescue
+        raise UDP_SEND_ERROR
+      end
     end
   end
 end
