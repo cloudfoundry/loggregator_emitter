@@ -1,6 +1,6 @@
 # Loggregator Emitter 
 
-[![Build Status](https://travis-ci.org/cloudfoundry/loggregator_emitter.png?branch=master)](https://travis-ci.org/cloudfoundry/loggregator_emitter) [![Coverage Status](https://coveralls.io/repos/cloudfoundry/loggregator_emitter/badge.png?branch=master)](https://coveralls.io/r/cloudfoundry/loggregator_emitter?branch=master)
+[![Build Status](https://travis-ci.org/cloudfoundry/loggregator_emitter.svg?branch=master)](https://travis-ci.org/cloudfoundry/loggregator_emitter) [![Coverage Status](https://coveralls.io/repos/cloudfoundry/loggregator_emitter/badge.svg?branch=master)](https://coveralls.io/r/cloudfoundry/loggregator_emitter?branch=master) [![Gem Version](https://badge.fury.io/rb/loggregator_emitter.svg)](http://badge.fury.io/rb/loggregator_emitter)
 
 ### About
 
