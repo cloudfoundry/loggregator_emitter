@@ -21,7 +21,7 @@ shared_examples "a performance test" do |fixture, using_server|
   let(:iterations) { using_server ? 100 : 1000 }
 
   before do
-    @emitter = LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "API", 42, "my-secret")
+    @emitter = LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "origin", "API", 42)
     if !using_server
       @emitter.should_receive(:send_protobuffer).at_least(iterations).times
     end

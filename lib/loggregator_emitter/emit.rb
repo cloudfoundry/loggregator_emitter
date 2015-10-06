@@ -1,5 +1,7 @@
 require 'socket'
 require 'resolv'
+require 'sonde/sonde.pb'
+require 'sonde/sonde_extender'
 
 module LoggregatorEmitter
   class Emitter
@@ -11,21 +13,22 @@ module LoggregatorEmitter
     MAX_MESSAGE_BYTE_SIZE = (9 * 1024) - 512
     TRUNCATED_STRING = "TRUNCATED"
 
-    def initialize(loggregator_server, source_name, source_id = nil, secret=nil)
+    def initialize(loggregator_server, origin, source_type, source_instance = nil)
       @host, @port = loggregator_server.split(/:([^:]*$)/)
 
       raise ArgumentError, "Must provide valid loggregator server: #{loggregator_server}" if !valid_hostname || !valid_port
       @host = ::Resolv.getaddresses(@host).last
       raise ArgumentError, "Must provide valid loggregator server: #{loggregator_server}" unless @host
 
-      raise ArgumentError, "Must provide valid source_name: #{source_name}" unless source_name
+      raise ArgumentError, "Must provide a valid origin" unless origin
+      raise ArgumentError, "Must provide valid source_type: #{source_type}" unless source_type
 
-      raise ArgumentError, "source_name must be a 3-character string" unless source_name.is_a? String
-      raise ArgumentError, "Custom Source String must be 3 characters" unless source_name.size == 3
-      @source_name = source_name
+      raise ArgumentError, "source_type must be a 3-character string" unless source_type.is_a? String
+      raise ArgumentError, "Custom Source String must be 3 characters" unless source_type.size == 3
+      @origin = origin
+      @source_type = source_type
 
-      @secret = secret
-      @source_id = source_id && source_id.to_s
+      @source_instance = source_instance && source_instance.to_s
     end
 
     def emit(app_id, message)
@@ -58,32 +61,26 @@ module LoggregatorEmitter
           m = m.byteslice(0, MAX_MESSAGE_BYTE_SIZE-TRUNCATED_STRING.bytesize) + TRUNCATED_STRING
         end
 
-        if @secret.nil? || @secret.empty?
-          send_protobuffer(create_log_message(app_id, m, type))
-        else
-          send_protobuffer(create_log_envelope(app_id, m, type))
-	      end
+        send_protobuffer(create_log_envelope(app_id, m, type))
       end
     end
 
     def create_log_message(app_id, message, type)
-      lm = LogMessage.new()
+      lm = ::Sonde::LogMessage.new()
       lm.time = Time.now
       lm.message = message
       lm.app_id = app_id
-      lm.source_id = @source_id
-      lm.source_name = @source_name
+      lm.source_instance = @source_instance
+      lm.source_type = @source_type
       lm.message_type = type
       lm
     end
 
     def create_log_envelope(app_id, message, type)
-      crypter = Encryption::Symmetric.new
-      le = LogEnvelope.new()
-      le.routing_key = app_id
-      le.log_message = create_log_message(app_id, message, type)
-      digest = crypter.digest(le.log_message.message)
-      le.signature = crypter.encrypt(@secret, digest)
+      le = ::Sonde::Envelope.new()
+      le.origin = @origin
+      le.eventType = ::Sonde::Envelope::EventType::LogMessage
+      le.logMessage = create_log_message(app_id, message, type)
       le
     end
 

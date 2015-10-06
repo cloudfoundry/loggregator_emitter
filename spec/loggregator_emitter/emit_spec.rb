@@ -22,47 +22,51 @@ describe LoggregatorEmitter do
   describe "configuring emitter" do
     describe "valid configurations" do
       it "is valid with IP and proper source name" do
-        expect { LoggregatorEmitter::Emitter.new("0.0.0.0:12345", "DEA") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("0.0.0.0:12345", "origin", "DEA") }.not_to raise_error
       end
 
       it "is valid with resolveable hostname and proper source name" do
-        expect { LoggregatorEmitter::Emitter.new("localhost:12345", "DEA") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", "DEA") }.not_to raise_error
       end
 
       it "accepts a string as source type/name" do
-        expect { LoggregatorEmitter::Emitter.new("localhost:12345", "STG") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", "STG") }.not_to raise_error
       end
     end
 
     describe "invalid configurations" do
       describe "error based on loggregator_server" do
         it "raises if host has protocol" do
-          expect { LoggregatorEmitter::Emitter.new("http://0.0.0.0:12345", "DEA") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("http://0.0.0.0:12345", "origin", "DEA") }.to raise_error(ArgumentError)
         end
 
         it "raises if host is blank" do
-          expect { LoggregatorEmitter::Emitter.new(":12345", "DEA") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new(":12345", "origin", "DEA") }.to raise_error(ArgumentError)
         end
 
         it "raises if host is unresolvable" do
-          expect { LoggregatorEmitter::Emitter.new("i.cant.resolve.foo:12345", "DEA") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("i.cant.resolve.foo:12345", "origin", "DEA") }.to raise_error(ArgumentError)
         end
 
-        it "raises if source is an unknown integer" do
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", 7) }.to raise_error(ArgumentError)
+        it "raises if origin is blank" do
+          expect { LoggregatorEmitter::Emitter.new(":12345", "", "DEA") }.to raise_error(ArgumentError)
         end
 
-        it "raises if source is not an integer or string" do
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", nil) }.to raise_error(ArgumentError)
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", 12.0) }.to raise_error(ArgumentError)
+        it "raises if source_type is an unknown integer" do
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", 7) }.to raise_error(ArgumentError)
         end
 
-        it "raises if source is too large of a string" do
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "ABCD") }.to raise_error(ArgumentError)
+        it "raises if source_type is not an integer or string" do
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", nil) }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", 12.0) }.to raise_error(ArgumentError)
         end
 
-        it "raises if source is too small of a string" do
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "AB") }.to raise_error(ArgumentError)
+        it "raises if source_type is too large of a string" do
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", "ABCD") }.to raise_error(ArgumentError)
+        end
+
+        it "raises if source_type is too small of a string" do
+          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", "AB") }.to raise_error(ArgumentError)
         end
       end
     end
@@ -71,7 +75,7 @@ describe LoggregatorEmitter do
 
   describe "emit_log_envelope" do
     def make_emitter(host)
-      LoggregatorEmitter::Emitter.new("#{host}:#{@free_port}", "API", 42, "secret")
+      LoggregatorEmitter::Emitter.new("#{host}:#{@free_port}", "origin", "API", 42)
     end
 
     it "successfully writes envelope protobuffers" do
@@ -84,16 +88,11 @@ describe LoggregatorEmitter do
 
       expect(messages.length).to eq 1
       message = messages[0]
-      expect(message.routing_key).to eq "my_app_id"
 
-      actual_digest = Encryption::Symmetric.new.decrypt("secret", message.signature)
-      expected_digest = Encryption::Symmetric.new.digest(message.log_message.message)
-      expect(actual_digest).to eq expected_digest
-
-      expect(message.log_message.message).to eq "Hello there!"
-      expect(message.log_message.app_id).to eq "my_app_id"
-      expect(message.log_message.source_id).to eq "42"
-      expect(message.log_message.message_type).to eq LogMessage::MessageType::OUT
+      expect(message.logMessage.message).to eq "Hello there!"
+      expect(message.logMessage.app_id).to eq "my_app_id"
+      expect(message.logMessage.source_instance).to eq "42"
+      expect(message.logMessage.message_type).to eq ::Sonde::LogMessage::MessageType::OUT
     end
 
     it "gracefully handles failures to send messages" do
@@ -122,7 +121,7 @@ describe LoggregatorEmitter do
   {"emit" => LogMessage::MessageType::OUT, "emit_error" => LogMessage::MessageType::ERR}.each do |emit_method, message_type|
     describe "##{emit_method}" do
       def make_emitter(host)
-        LoggregatorEmitter::Emitter.new("#{host}:#{@free_port}", "API", 42)
+        LoggregatorEmitter::Emitter.new("#{host}:#{@free_port}", "origin", "API", 42)
       end
 
       it "successfully writes protobuffers using ipv4" do
@@ -136,13 +135,13 @@ describe LoggregatorEmitter do
         messages = @server.messages
 
         expect(messages.length).to eq 2
-        message = messages[0]
+        message = messages[0].logMessage
         expect(message.message).to eq "Hello there!"
         expect(message.app_id).to eq "my_app_id"
-        expect(message.source_id).to eq "42"
+        expect(message.source_instance).to eq "42"
         expect(message.message_type).to eq message_type
 
-        message = messages[1]
+        message = messages[1].logMessage
         expect(message.message).to eq "Hello again!"
       end
 
@@ -154,7 +153,7 @@ describe LoggregatorEmitter do
 
         messages = @server.messages
         expect(messages.length).to eq 1
-        expect(messages[0].message).to eq "Hello there!"
+        expect(messages[0].logMessage.message).to eq "Hello there!"
       end
 
       it "successfully writes protobuffers using a dns name" do
@@ -165,7 +164,7 @@ describe LoggregatorEmitter do
 
         messages = @server.messages
         expect(messages.length).to eq 1
-        expect(messages[0].message).to eq "Hello there!"
+        expect(messages[0].logMessage.message).to eq "Hello there!"
       end
 
       it "swallows empty messages" do
@@ -189,8 +188,9 @@ describe LoggregatorEmitter do
 
         messages = @server.messages
         expect(messages.length).to eq 1
-        expect(messages[0].message.bytesize <= LoggregatorEmitter::Emitter::MAX_MESSAGE_BYTE_SIZE).to be_true
-        expect(messages[0].message.slice(-9..-1)).to eq("TRUNCATED")
+        logMessage = messages[0].logMessage
+        expect(logMessage.message.bytesize <= LoggregatorEmitter::Emitter::MAX_MESSAGE_BYTE_SIZE).to be_true
+        expect(logMessage.message.slice(-9..-1)).to eq("TRUNCATED")
       end
 
       it "splits messages by newlines" do
@@ -212,7 +212,7 @@ describe LoggregatorEmitter do
 
         messages = @server.messages
         expect(messages.length).to eq 1
-        expect(messages[0].message.force_encoding("utf-8")).to eq "測試"
+        expect(messages[0].logMessage.message.force_encoding("utf-8")).to eq "測試"
       end
     end
   end
@@ -224,32 +224,32 @@ describe LoggregatorEmitter do
 
       @server.wait_for_messages(2)
 
-      @server.messages[0]
+      @server.messages[0].logMessage
     end
 
     it "when type is known" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "API")
-      expect(emit_message.source_name).to eq "API"
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "API")
+      expect(emit_message.source_type).to eq "API"
     end
 
     it "when type is unknown" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "STG")
-      expect(emit_message.source_name).to eq "STG"
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "STG")
+      expect(emit_message.source_type).to eq "STG"
     end
 
     it "id can be nil" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "API")
-      expect(emit_message.source_id).to eq nil
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "API")
+      expect(emit_message.source_instance).to eq nil
     end
 
     it "id can be passed in as a string" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "API", "some_source_id")
-      expect(emit_message.source_id).to eq "some_source_id"
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "API", "some_source_id")
+      expect(emit_message.source_instance).to eq "some_source_id"
     end
 
     it "id can be passed in as an integer" do
-      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "API", 13)
-      expect(emit_message.source_id).to eq "13"
+      @emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "API", 13)
+      expect(emit_message.source_instance).to eq "13"
     end
   end
 end

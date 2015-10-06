@@ -6,7 +6,7 @@
 
 This gem provides an API to emit messages to the loggregator agent from Ruby applications.
 
-Create an emitter object with the loggregator router host and port, a source name of the emitter, and a shared secret (for signing).
+Create an emitter object with the loggregator router host and port, an origin, and a source name of the emitter.
 
 Call emit() or emit_error() on this emitter with the application GUID and the message string.
 
@@ -29,7 +29,7 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
 
     require "loggregator_emitter"
 
-    emitter = LoggregatorEmitter::Emitter.new("10.10.10.16:38452", "API")
+    emitter = LoggregatorEmitter::Emitter.new("10.10.10.16:38452", "origin", API")
 
     app_guid = "a8977cb6-3365-4be1-907e-0c878b3a4c6b" # The GUID(UUID) for the user's application
 
@@ -38,7 +38,8 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
     emitter.emit_error(app_guid,error_message) # Emits messages with a message type of ERR
 
 ### Regenerating Protobuf library
-    protoc --beefcake_out lib/loggregator_messages -I lib/loggregator_messages lib/loggregator_messages/log_message.proto
+
+BEEFCAKE_NAMESPACE=Sonde protoc --beefcake_out lib/sonde -I lib/sonde lib/sonde/sonde.proto
 
 ### Versioning
 

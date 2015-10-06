@@ -1,5 +1,6 @@
 require 'socket'
-require 'loggregator_messages/log_message.pb'
+require 'sonde/sonde.pb'
+require 'sonde/sonde_extender'
 
 class FakeLoggregatorServer
 
@@ -47,16 +48,11 @@ class FakeLoggregatorServer
       while true
         begin
           stuff = socket.recv(65536)
-          decoded_data = LogMessage.decode(stuff.dup)
+          decoded_data = ::Sonde::Envelope.decode(stuff.dup)
           messages << decoded_data
         rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError => e
-          begin
-            decoded_data = LogEnvelope.decode(stuff.dup)
-            messages << decoded_data
-          rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError => e
-            puts "ERROR: neither envelope nor message extraction worked"
-            puts e
-          end
+          puts "ERROR: envelope extraction failed"
+          puts e
         end
       end
     end

@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "loggregator_emitter"
-  spec.version       = '4.0.0'
+  spec.version       = '5.0.0'
   spec.authors       = ["Pivotal"]
   spec.email         = ["cf-eng@pivotallabs.com"]
   spec.description   = "Library to emit data to Loggregator"
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "beefcake", "~> 1.0.0"
 
   spec.add_development_dependency "bundler", "~> 1.3"
-  spec.add_development_dependency "rake", "~> 10.1.0"
+  spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec", "~> 2.14.1"
   spec.add_development_dependency "coveralls"
 end
