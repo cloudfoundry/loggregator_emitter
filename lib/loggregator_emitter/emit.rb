@@ -1,7 +1,6 @@
 require 'socket'
 require 'resolv'
-require 'sonde/sonde.pb'
-require 'sonde/sonde_extender'
+require 'sonde'
 
 module LoggregatorEmitter
   class Emitter

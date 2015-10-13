@@ -39,7 +39,7 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
 
 ### Regenerating Protobuf library
 
-BEEFCAKE_NAMESPACE=Sonde protoc --beefcake_out lib/sonde -I lib/sonde lib/sonde/sonde.proto
+BEEFCAKE_NAMESPACE=Sonde protoc --beefcake_out lib/sonde -I ~/workspace/cf-release/src/loggregator/src/github.com/cloudfoundry/sonde-go/definitions/events ~/workspace/cf-release/src/loggregator/src/github.com/cloudfoundry/sonde-go/definitions/events/envelope.proto
 
 ### Versioning
 

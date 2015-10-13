@@ -1,6 +1,5 @@
 require 'socket'
-require 'sonde/sonde.pb'
-require 'sonde/sonde_extender'
+require 'sonde'
 
 class FakeLoggregatorServer
 

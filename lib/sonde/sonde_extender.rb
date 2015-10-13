@@ -1,5 +1,4 @@
 module Sonde
-
   class LogMessage
     def message_type_name
       {MessageType::OUT => 'STDOUT', MessageType::ERR => 'STDERR'}[message_type]
@@ -15,5 +14,4 @@ module Sonde
       Time.at(num_secs, fractional_usecs)
     end
   end
-
 end
