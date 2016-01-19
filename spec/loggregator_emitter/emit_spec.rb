@@ -72,7 +72,7 @@ describe LoggregatorEmitter do
     end
   end
 
-
+  let(:timestamp) {Time.now}
   describe "emit_log_envelope" do
     def make_emitter(host)
       LoggregatorEmitter::Emitter.new("#{host}:#{@free_port}", "origin", "API", 42)
@@ -115,6 +115,72 @@ describe LoggregatorEmitter do
       #This test is here to create arrays of bytes to be used in the golang emitter to verify that they are compatible.
       #One of the results we saw:
       #[10, 9, 109, 121, 95, 97, 112, 112, 95, 105, 100, 18, 96, 163, 227, 248, 110, 81, 17, 141, 224, 211, 132, 74, 230, 43, 169, 76, 169, 244, 119, 169, 212, 160, 121, 128, 89, 13, 149, 218, 136, 72, 217, 89, 226, 41, 57, 80, 77, 24, 152, 98, 120, 145, 125, 29, 239, 34, 26, 20, 162, 137, 215, 170, 121, 185, 167, 221, 161, 139, 87, 139, 102, 152, 137, 11, 232, 137, 227, 74, 252, 166, 44, 176, 208, 6, 131, 15, 250, 43, 193, 233, 254, 189, 26, 194, 237, 43, 35, 97, 123, 156, 215, 47, 201, 228, 136, 210, 245, 26, 43, 10, 12, 72, 101, 108, 108, 111, 32, 116, 104, 101, 114, 101, 33, 16, 1, 24, 224, 175, 235, 159, 154, 239, 210, 177, 38, 34, 9, 109, 121, 95, 97, 112, 112, 95, 105, 100, 40, 1, 50, 2, 52, 50]
+    end
+  end
+
+  describe "#emit_value_metric" do
+    let(:emitter) { LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "DEA")}
+
+    it 'successfully writes envelope protobuffers' do
+      Timecop.freeze timestamp do
+        emitter.emit_value_metric('my-metric', 5155, 'my-units')
+      end
+
+      @server.wait_for_messages(1)
+      messages = @server.messages
+
+      expect(messages.length).to eq 1
+      message = messages[0]
+
+      expect(message.time).to be_within(1).of(timestamp)
+      expect(message.valueMetric.value).to eq(5155)
+      expect(message.valueMetric.name).to eq('my-metric')
+      expect(message.valueMetric.unit).to eq('my-units')
+    end
+  end
+
+  describe "#emit_counter" do
+    let(:emitter) { LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "DEA")}
+
+    it 'successfully writes envelope protobuffers' do
+      Timecop.freeze timestamp do
+        emitter.emit_counter('my-counter', 5)
+      end
+
+      @server.wait_for_messages(1)
+
+      messages = @server.messages
+
+      expect(messages.length).to eq 1
+      message = messages[0]
+
+      expect(message.time).to be_within(1).of(timestamp)
+      expect(message.counterEvent.delta).to eq(5)
+      expect(message.counterEvent.name).to eq('my-counter')
+    end
+  end
+
+  describe "#emit_container_metric" do
+    let(:emitter) { LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "DEA")}
+
+    it 'successfully writes envelope protobuffers' do
+      Timecop.freeze timestamp do
+        emitter.emit_container_metric('app-id', 3, 1.3, 1024, 2048)
+      end
+
+      @server.wait_for_messages(1)
+
+      messages = @server.messages
+
+      expect(messages.length).to eq 1
+      message = messages[0]
+
+      expect(message.time).to be_within(1).of(timestamp)
+      expect(message.containerMetric.applicationId).to eq('app-id')
+      expect(message.containerMetric.instanceIndex).to eq(3)
+      expect(message.containerMetric.cpuPercentage).to eq(1.3)
+      expect(message.containerMetric.memoryBytes).to eq(1024)
+      expect(message.containerMetric.diskBytes).to eq(2048)
     end
   end
 

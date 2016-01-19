@@ -38,6 +38,24 @@ module LoggregatorEmitter
       emit_message(app_id, message, LogMessage::MessageType::ERR)
     end
 
+    def emit_value_metric(name, value, unit)
+      return unless name && value && unit
+
+      send_protobuffer(create_value_metric_envelope(name, value, unit))
+    end
+
+    def emit_counter(name, delta)
+      return unless name && delta
+
+      send_protobuffer(create_counter_envelope(name, delta))
+    end
+
+    def emit_container_metric(app_id, instanceIndex, cpu, memory, disk)
+      return unless app_id && instanceIndex && cpu && memory && disk
+
+      send_protobuffer(create_container_metric_envelope(app_id, instanceIndex, cpu, memory, disk))
+    end
+
     private
 
     def valid_port
@@ -81,6 +99,58 @@ module LoggregatorEmitter
       le.eventType = ::Sonde::Envelope::EventType::LogMessage
       le.logMessage = create_log_message(app_id, message, type)
       le
+    end
+
+    def create_value_metric(name, value, unit)
+      metric = ::Sonde::ValueMetric.new()
+      metric.name = name
+      metric.value = value
+      metric.unit = unit
+      metric
+    end
+
+    def create_value_metric_envelope(name, value, unit)
+      envelope = ::Sonde::Envelope.new()
+      envelope.time = Time.now
+      envelope.origin = @origin
+      envelope.eventType = ::Sonde::Envelope::EventType::ValueMetric
+      envelope.valueMetric = create_value_metric(name, value, unit)
+      envelope
+    end
+
+    def create_counter_event(name, delta)
+      counter = ::Sonde::CounterEvent.new()
+      counter.name = name
+      counter.delta = delta
+      counter
+    end
+
+    def create_counter_envelope(name, delta)
+      envelope = ::Sonde::Envelope.new()
+      envelope.time = Time.now
+      envelope.origin = @origin
+      envelope.eventType = ::Sonde::Envelope::EventType::CounterEvent
+      envelope.counterEvent = create_counter_event(name, delta)
+      envelope
+    end
+
+    def create_container_metric(app_id, instanceIndex, cpu, memory, disk)
+      metric = ::Sonde::ContainerMetric.new()
+      metric.applicationId = app_id
+      metric.instanceIndex = instanceIndex
+      metric.cpuPercentage = cpu
+      metric.memoryBytes = memory
+      metric.diskBytes = disk
+      metric
+    end
+
+    def create_container_metric_envelope(app_id, instanceIndex, cpu, memory, disk)
+      envelope = ::Sonde::Envelope.new()
+      envelope.time = Time.now
+      envelope.origin = @origin
+      envelope.eventType = ::Sonde::Envelope::EventType::ContainerMetric
+      envelope.containerMetric = create_container_metric(app_id, instanceIndex, cpu, memory, disk)
+      envelope
     end
 
     def send_protobuffer(lm)
