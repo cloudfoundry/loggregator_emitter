@@ -82,9 +82,9 @@ module LoggregatorEmitter
       end
     end
 
-    def create_log_message(app_id, message, type)
+    def create_log_message(app_id, message, type, time)
       lm = ::Sonde::LogMessage.new()
-      lm.time = Time.now
+      lm.time = time
       lm.message = message
       lm.app_id = app_id
       lm.source_instance = @source_instance
@@ -96,8 +96,9 @@ module LoggregatorEmitter
     def create_log_envelope(app_id, message, type)
       le = ::Sonde::Envelope.new()
       le.origin = @origin
+      le.time = Time.now
       le.eventType = ::Sonde::Envelope::EventType::LogMessage
-      le.logMessage = create_log_message(app_id, message, type)
+      le.logMessage = create_log_message(app_id, message, type, le.time)
       le
     end
 

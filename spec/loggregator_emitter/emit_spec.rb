@@ -80,7 +80,9 @@ describe LoggregatorEmitter do
 
     it "successfully writes envelope protobuffers" do
       emitter = make_emitter("0.0.0.0")
-      emitter.emit("my_app_id", "Hello there!")
+      Timecop.freeze timestamp do
+        emitter.emit("my_app_id", "Hello there!")
+      end
 
       @server.wait_for_messages(1)
 
@@ -89,6 +91,8 @@ describe LoggregatorEmitter do
       expect(messages.length).to eq 1
       message = messages[0]
 
+      expect(message.time).to be_within(1).of timestamp
+      expect(message.logMessage.time).to be_within(1).of timestamp
       expect(message.logMessage.message).to eq "Hello there!"
       expect(message.logMessage.app_id).to eq "my_app_id"
       expect(message.logMessage.source_instance).to eq "42"
