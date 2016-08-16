@@ -72,6 +72,14 @@ describe LoggregatorEmitter do
     end
   end
 
+  def test_tags(tags)
+    expected_tags = []
+    tags.each do |k, v|
+      expected_tags << ::Sonde::Envelope::TagsEntry.new(:key => k, :value => v)
+    end
+    expected_tags
+  end
+
   let(:timestamp) {Time.now}
   describe "emit_log_envelope" do
     def make_emitter(host)
@@ -79,9 +87,10 @@ describe LoggregatorEmitter do
     end
 
     it "successfully writes envelope protobuffers" do
+      tag = {"key1" => "value1"}
       emitter = make_emitter("0.0.0.0")
       Timecop.freeze timestamp do
-        emitter.emit("my_app_id", "Hello there!")
+        emitter.emit("my_app_id", "Hello there!", tag)
       end
 
       @server.wait_for_messages(1)
@@ -96,7 +105,25 @@ describe LoggregatorEmitter do
       expect(message.logMessage.message).to eq "Hello there!"
       expect(message.logMessage.app_id).to eq "my_app_id"
       expect(message.logMessage.source_instance).to eq "42"
+      expect(message.tags).to eq test_tags(tag)
       expect(message.logMessage.message_type).to eq ::Sonde::LogMessage::MessageType::OUT
+    end
+
+    it "successfully handles envelope with multiple tags" do
+      tags = {"key1" => "value1", "key2" => "value2"}
+      emitter = make_emitter("0.0.0.0")
+      Timecop.freeze timestamp do
+        emitter.emit("my_app_id", "Hello there!", tags)
+      end
+
+      @server.wait_for_messages(1)
+
+      messages = @server.messages
+
+      expect(messages.length).to eq 1
+      message = messages[0]
+
+      expect(message.tags).to eq test_tags(tags)
     end
 
     it "gracefully handles failures to send messages" do
@@ -126,8 +153,9 @@ describe LoggregatorEmitter do
     let(:emitter) { LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "DEA")}
 
     it 'successfully writes envelope protobuffers' do
+      tag = {"key1" => "value1"}
       Timecop.freeze timestamp do
-        emitter.emit_value_metric('my-metric', 5155, 'my-units')
+        emitter.emit_value_metric('my-metric', 5155, 'my-units', tag)
       end
 
       @server.wait_for_messages(1)
@@ -140,6 +168,22 @@ describe LoggregatorEmitter do
       expect(message.valueMetric.value).to eq(5155)
       expect(message.valueMetric.name).to eq('my-metric')
       expect(message.valueMetric.unit).to eq('my-units')
+      expect(message.tags).to eq test_tags(tag)
+    end
+
+    it "successfully handles envelope with multiple tags" do
+      tags = {"key1" => "value1", "key2" => "value2"}
+      Timecop.freeze timestamp do
+        emitter.emit_value_metric('my-metric', 5155, 'my-units', tags)
+      end
+
+      @server.wait_for_messages(1)
+      messages = @server.messages
+
+      expect(messages.length).to eq 1
+      message = messages[0]
+
+      expect(message.tags).to eq test_tags(tags)
     end
   end
 
@@ -147,8 +191,9 @@ describe LoggregatorEmitter do
     let(:emitter) { LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "DEA")}
 
     it 'successfully writes envelope protobuffers' do
+      tag = {"key1" => "value1"}
       Timecop.freeze timestamp do
-        emitter.emit_counter('my-counter', 5)
+        emitter.emit_counter('my-counter', 5, tag)
       end
 
       @server.wait_for_messages(1)
@@ -161,6 +206,23 @@ describe LoggregatorEmitter do
       expect(message.time).to be_within(1).of(timestamp)
       expect(message.counterEvent.delta).to eq(5)
       expect(message.counterEvent.name).to eq('my-counter')
+      expect(message.tags).to eq test_tags(tag)
+    end
+
+    it "successfully handles envelope with multiple tags" do
+      tags = {"key1" => "value1", "key2" => "value2"}
+      Timecop.freeze timestamp do
+        emitter.emit_counter('my-counter', 5, tags)
+      end
+
+      @server.wait_for_messages(1)
+
+      messages = @server.messages
+
+      expect(messages.length).to eq 1
+      message = messages[0]
+
+      expect(message.tags).to eq test_tags(tags)
     end
   end
 
@@ -168,8 +230,9 @@ describe LoggregatorEmitter do
     let(:emitter) { LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "DEA")}
 
     it 'successfully writes envelope protobuffers' do
+      tag = {"key1" => "value1"}
       Timecop.freeze timestamp do
-        emitter.emit_container_metric('app-id', 3, 1.3, 1024, 2048)
+        emitter.emit_container_metric('app-id', 3, 1.3, 1024, 2048, tag)
       end
 
       @server.wait_for_messages(1)
@@ -185,6 +248,29 @@ describe LoggregatorEmitter do
       expect(message.containerMetric.cpuPercentage).to eq(1.3)
       expect(message.containerMetric.memoryBytes).to eq(1024)
       expect(message.containerMetric.diskBytes).to eq(2048)
+      expect(message.tags).to eq test_tags(tag)
+    end
+
+    it "successfully handles envelope with multiple tags" do
+      tags = {"key1" => "value1", "key2" => "value2"}
+      Timecop.freeze timestamp do
+        emitter.emit_container_metric('app-id', 3, 1.3, 1024, 2048, tags)
+      end
+
+      @server.wait_for_messages(1)
+
+      messages = @server.messages
+
+      expect(messages.length).to eq 1
+      message = messages[0]
+
+      expect(message.time).to be_within(1).of(timestamp)
+      expect(message.containerMetric.applicationId).to eq('app-id')
+      expect(message.containerMetric.instanceIndex).to eq(3)
+      expect(message.containerMetric.cpuPercentage).to eq(1.3)
+      expect(message.containerMetric.memoryBytes).to eq(1024)
+      expect(message.containerMetric.diskBytes).to eq(2048)
+      expect(message.tags).to eq test_tags(tags)
     end
   end
 

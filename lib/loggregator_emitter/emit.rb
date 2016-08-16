@@ -30,30 +30,30 @@ module LoggregatorEmitter
       @source_instance = source_instance && source_instance.to_s
     end
 
-    def emit(app_id, message)
-      emit_message(app_id, message, LogMessage::MessageType::OUT)
+    def emit(app_id, message, tags = nil)
+      emit_message(app_id, message, LogMessage::MessageType::OUT, tags)
     end
 
-    def emit_error(app_id, message)
-      emit_message(app_id, message, LogMessage::MessageType::ERR)
+    def emit_error(app_id, message, tags = nil)
+      emit_message(app_id, message, LogMessage::MessageType::ERR, tags)
     end
 
-    def emit_value_metric(name, value, unit)
+    def emit_value_metric(name, value, unit, tags = nil)
       return unless name && value && unit
 
-      send_protobuffer(create_value_metric_envelope(name, value, unit))
+      send_protobuffer(create_value_metric_envelope(name, value, unit, tags))
     end
 
-    def emit_counter(name, delta)
+    def emit_counter(name, delta, tags = nil)
       return unless name && delta
 
-      send_protobuffer(create_counter_envelope(name, delta))
+      send_protobuffer(create_counter_envelope(name, delta, tags))
     end
 
-    def emit_container_metric(app_id, instanceIndex, cpu, memory, disk)
+    def emit_container_metric(app_id, instanceIndex, cpu, memory, disk, tags = nil)
       return unless app_id && instanceIndex && cpu && memory && disk
 
-      send_protobuffer(create_container_metric_envelope(app_id, instanceIndex, cpu, memory, disk))
+      send_protobuffer(create_container_metric_envelope(app_id, instanceIndex, cpu, memory, disk, tags))
     end
 
     private
@@ -70,7 +70,15 @@ module LoggregatorEmitter
       message.split(/\n|\r/).reject { |a| a.empty? }
     end
 
-    def emit_message(app_id, message, type)
+    def set_tags(tags)
+      envelope_tags = []
+      tags.each do |k, v|
+        envelope_tags << ::Sonde::Envelope::TagsEntry.new(:key => k, :value => v)
+      end
+      envelope_tags
+    end
+
+    def emit_message(app_id, message, type, tags = nil)
       return unless app_id && message && message.strip.length > 0
 
       split_message(message).each do |m|
@@ -78,7 +86,7 @@ module LoggregatorEmitter
           m = m.byteslice(0, MAX_MESSAGE_BYTE_SIZE-TRUNCATED_STRING.bytesize) + TRUNCATED_STRING
         end
 
-        send_protobuffer(create_log_envelope(app_id, m, type))
+        send_protobuffer(create_log_envelope(app_id, m, type, tags))
       end
     end
 
@@ -93,12 +101,15 @@ module LoggregatorEmitter
       lm
     end
 
-    def create_log_envelope(app_id, message, type)
+    def create_log_envelope(app_id, message, type, tags = nil)
       le = ::Sonde::Envelope.new()
       le.origin = @origin
       le.time = Time.now
       le.eventType = ::Sonde::Envelope::EventType::LogMessage
       le.logMessage = create_log_message(app_id, message, type, le.time)
+      if tags != nil
+        le.tags = set_tags(tags)
+      end
       le
     end
 
@@ -110,12 +121,15 @@ module LoggregatorEmitter
       metric
     end
 
-    def create_value_metric_envelope(name, value, unit)
+    def create_value_metric_envelope(name, value, unit, tags = nil)
       envelope = ::Sonde::Envelope.new()
       envelope.time = Time.now
       envelope.origin = @origin
       envelope.eventType = ::Sonde::Envelope::EventType::ValueMetric
       envelope.valueMetric = create_value_metric(name, value, unit)
+      if tags != nil
+        envelope.tags = set_tags(tags)
+      end
       envelope
     end
 
@@ -126,12 +140,15 @@ module LoggregatorEmitter
       counter
     end
 
-    def create_counter_envelope(name, delta)
+    def create_counter_envelope(name, delta, tags = nil)
       envelope = ::Sonde::Envelope.new()
       envelope.time = Time.now
       envelope.origin = @origin
       envelope.eventType = ::Sonde::Envelope::EventType::CounterEvent
       envelope.counterEvent = create_counter_event(name, delta)
+      if tags != nil
+        envelope.tags = set_tags(tags)
+      end
       envelope
     end
 
@@ -145,12 +162,15 @@ module LoggregatorEmitter
       metric
     end
 
-    def create_container_metric_envelope(app_id, instanceIndex, cpu, memory, disk)
+    def create_container_metric_envelope(app_id, instanceIndex, cpu, memory, disk, tags = nil)
       envelope = ::Sonde::Envelope.new()
       envelope.time = Time.now
       envelope.origin = @origin
       envelope.eventType = ::Sonde::Envelope::EventType::ContainerMetric
       envelope.containerMetric = create_container_metric(app_id, instanceIndex, cpu, memory, disk)
+      if tags != nil
+        envelope.tags = set_tags(tags)
+      end
       envelope
     end
 

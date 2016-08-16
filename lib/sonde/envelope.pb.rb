@@ -16,9 +16,18 @@ module Sonde
       Error = 8
       ContainerMetric = 9
     end
+
+    class TagsEntry
+      include Beefcake::Message
+    end
   end
 
   class Envelope
+
+    class TagsEntry
+      optional :key, :string, 1
+      optional :value, :string, 2
+    end
     required :origin, :string, 1
     required :eventType, Envelope::EventType, 2
     optional :timestamp, :int64, 6
@@ -26,6 +35,7 @@ module Sonde
     optional :job, :string, 14
     optional :index, :string, 15
     optional :ip, :string, 16
+    repeated :tags, Envelope::TagsEntry, 17
     optional :httpStart, HttpStart, 4
     optional :httpStop, HttpStop, 5
     optional :httpStartStop, HttpStartStop, 7

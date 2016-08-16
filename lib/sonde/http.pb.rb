@@ -102,9 +102,9 @@ module Sonde
     required :userAgent, :string, 8
     required :statusCode, :int32, 9
     required :contentLength, :int64, 10
-    optional :parentRequestId, UUID, 11
     optional :applicationId, UUID, 12
     optional :instanceIndex, :int32, 13
     optional :instanceId, :string, 14
+    repeated :forwarded, :string, 15
   end
 end

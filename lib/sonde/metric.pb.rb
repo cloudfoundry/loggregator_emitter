@@ -33,5 +33,7 @@ module Sonde
     required :cpuPercentage, :double, 3
     required :memoryBytes, :uint64, 4
     required :diskBytes, :uint64, 5
+    optional :memoryBytesQuota, :uint64, 6
+    optional :diskBytesQuota, :uint64, 7
   end
 end
