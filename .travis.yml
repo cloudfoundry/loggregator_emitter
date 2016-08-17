@@ -4,7 +4,7 @@ notifications:
 language: ruby
 rvm:
 - 2.0.0
-- 2.3
+- 2.3.0
 script:
 - bundle exec rake nonperformance
 - DISABLE_COVERAGE=true bundle exec rake performance
