@@ -1,7 +1,12 @@
 notifications:
   email:
   - cf-loggregator@pivotallabs.com
+
+sudo: required
+dist: precise
+group: legacy
 language: ruby
+
 rvm:
 - 2.0.0
 - 2.3.0
