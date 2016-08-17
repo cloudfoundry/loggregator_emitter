@@ -6,7 +6,7 @@ require "loggregator_emitter"
 describe LoggregatorEmitter do
 
   before :all do
-    @free_port = 12345
+    @free_port = test_port
     @server = FakeLoggregatorServer.new(@free_port)
     @server.start
   end
@@ -19,54 +19,59 @@ describe LoggregatorEmitter do
     @server.reset
   end
 
+  def test_port
+    server = TCPServer.new('localhost', 0)
+    server.addr[1]
+  end
+
   describe "configuring emitter" do
     describe "valid configurations" do
       it "is valid with IP and proper source name" do
-        expect { LoggregatorEmitter::Emitter.new("0.0.0.0:12345", "origin", "DEA") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "DEA") }.not_to raise_error
       end
 
       it "is valid with resolveable hostname and proper source name" do
-        expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", "DEA") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "origin", "DEA") }.not_to raise_error
       end
 
       it "accepts a string as source type/name" do
-        expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", "STG") }.not_to raise_error
+        expect { LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "origin", "STG") }.not_to raise_error
       end
     end
 
     describe "invalid configurations" do
       describe "error based on loggregator_server" do
         it "raises if host has protocol" do
-          expect { LoggregatorEmitter::Emitter.new("http://0.0.0.0:12345", "origin", "DEA") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("http://0.0.0.0:#{@free_port}", "origin", "DEA") }.to raise_error(ArgumentError)
         end
 
         it "raises if host is blank" do
-          expect { LoggregatorEmitter::Emitter.new(":12345", "origin", "DEA") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new(":#{@free_port}", "origin", "DEA") }.to raise_error(ArgumentError)
         end
 
         it "raises if host is unresolvable" do
-          expect { LoggregatorEmitter::Emitter.new("i.cant.resolve.foo:12345", "origin", "DEA") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("i.cant.resolve.foo:#{@free_port}", "origin", "DEA") }.to raise_error(ArgumentError)
         end
 
         it "raises if origin is blank" do
-          expect { LoggregatorEmitter::Emitter.new(":12345", "", "DEA") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new(":#{@free_port}", "", "DEA") }.to raise_error(ArgumentError)
         end
 
         it "raises if source_type is an unknown integer" do
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", 7) }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "origin", 7) }.to raise_error(ArgumentError)
         end
 
         it "raises if source_type is not an integer or string" do
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", nil) }.to raise_error(ArgumentError)
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", 12.0) }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "origin", nil) }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "origin", 12.0) }.to raise_error(ArgumentError)
         end
 
         it "raises if source_type is too large of a string" do
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", "ABCD") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "origin", "ABCD") }.to raise_error(ArgumentError)
         end
 
         it "raises if source_type is too small of a string" do
-          expect { LoggregatorEmitter::Emitter.new("localhost:12345", "origin", "AB") }.to raise_error(ArgumentError)
+          expect { LoggregatorEmitter::Emitter.new("localhost:#{@free_port}", "origin", "AB") }.to raise_error(ArgumentError)
         end
       end
     end
