@@ -3,8 +3,8 @@ notifications:
   - cf-loggregator@pivotallabs.com
 language: ruby
 rvm:
-- 1.9.3
 - 2.0.0
+- 2.3
 script:
 - bundle exec rake nonperformance
 - DISABLE_COVERAGE=true bundle exec rake performance
