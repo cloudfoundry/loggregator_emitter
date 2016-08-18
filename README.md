@@ -12,12 +12,12 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
 
 ##### A valid source name is any 3 character string.   Some common component sources are:
 
- 	API (Cloud Controller)
- 	RTR (Go Router)
- 	UAA
- 	DEA
- 	APP (Warden container)
- 	LGR (Loggregator)
+    API (Cloud Controller)
+    RTR (Go Router)
+    UAA
+    DEA
+    APP (Warden container)
+    LGR (Loggregator)
 
 ### Setup
 
@@ -33,9 +33,11 @@ Call emit() or emit_error() on this emitter with the application GUID and the me
 
     app_guid = "a8977cb6-3365-4be1-907e-0c878b3a4c6b" # The GUID(UUID) for the user's application
 
-    emitter.emit(app_guid,message) # Emits messages with a message type of OUT
+    emitter.emit(app_guid, message) # Emits messages with a message type of OUT
 
-    emitter.emit_error(app_guid,error_message) # Emits messages with a message type of ERR
+    emitter.emit(app_guid, message, {"key" => "value"}) # Emits messages with tags
+
+    emitter.emit_error(app_guid, error_message) # Emits messages with a message type of ERR
 
 ### Regenerating Protobuf library
 
