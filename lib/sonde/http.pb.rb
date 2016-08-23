@@ -55,40 +55,8 @@ module Sonde
     VERSION_CONTROL = 44
   end
 
-  class HttpStart
-    include Beefcake::Message
-  end
-
-  class HttpStop
-    include Beefcake::Message
-  end
-
   class HttpStartStop
     include Beefcake::Message
-  end
-
-  class HttpStart
-    required :timestamp, :int64, 1
-    required :requestId, UUID, 2
-    required :peerType, PeerType, 3
-    required :method, Method, 4
-    required :uri, :string, 5
-    required :remoteAddress, :string, 6
-    required :userAgent, :string, 7
-    optional :parentRequestId, UUID, 8
-    optional :applicationId, UUID, 9
-    optional :instanceIndex, :int32, 10
-    optional :instanceId, :string, 11
-  end
-
-  class HttpStop
-    required :timestamp, :int64, 1
-    required :uri, :string, 2
-    required :requestId, UUID, 3
-    required :peerType, PeerType, 4
-    required :statusCode, :int32, 5
-    required :contentLength, :int64, 6
-    optional :applicationId, UUID, 7
   end
 
   class HttpStartStop

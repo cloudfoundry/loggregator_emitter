@@ -7,8 +7,6 @@ module Sonde
     include Beefcake::Message
 
     module EventType
-      HttpStart = 2
-      HttpStop = 3
       HttpStartStop = 4
       LogMessage = 5
       ValueMetric = 6
@@ -36,8 +34,6 @@ module Sonde
     optional :index, :string, 15
     optional :ip, :string, 16
     repeated :tags, Envelope::TagsEntry, 17
-    optional :httpStart, HttpStart, 4
-    optional :httpStop, HttpStop, 5
     optional :httpStartStop, HttpStartStop, 7
     optional :logMessage, LogMessage, 8
     optional :valueMetric, ValueMetric, 9
