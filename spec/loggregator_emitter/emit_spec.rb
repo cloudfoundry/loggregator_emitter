@@ -85,6 +85,52 @@ describe LoggregatorEmitter do
     expected_tags
   end
 
+  describe "max_tag_length" do
+    it "throws an exception when the key is too long" do
+      too_long = "x" * 257
+      tag = {too_long => "a"}
+
+      emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "API", 42)
+
+      Timecop.freeze timestamp do
+        expect { emitter.emit("my_app_id", "Hello there!", tag) }.to raise_error(ArgumentError)
+      end
+    end
+
+    it "throws an exception when the value is too long" do
+      too_long = "x" * 257
+      tag = {"a" => too_long}
+
+      emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "API", 42)
+
+      Timecop.freeze timestamp do
+        expect { emitter.emit("my_app_id", "Hello there!", tag) }.to raise_error(ArgumentError)
+      end
+    end
+
+    it "counts multi-byte unicode characters as single characters when checking key length" do
+      just_right = "x" * 255 + "Ω"
+      tag = {just_right => "a"}
+
+      emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "API", 42)
+
+      Timecop.freeze timestamp do
+        expect { emitter.emit("my_app_id", "Hello there!", tag) }.not_to raise_error
+      end
+    end
+
+    it "counts multi-byte unicode characters as single characters when checking value length" do
+      just_right = "x" * 255 + "Ω"
+      tag = {"a" => just_right}
+
+      emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "API", 42)
+
+      Timecop.freeze timestamp do
+        expect { emitter.emit("my_app_id", "Hello there!", tag) }.not_to raise_error
+      end
+    end
+  end
+
   let(:timestamp) {Time.now}
   describe "emit_log_envelope" do
     def make_emitter(host)

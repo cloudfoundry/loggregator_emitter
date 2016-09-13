@@ -73,6 +73,8 @@ module LoggregatorEmitter
     def set_tags(tags)
       envelope_tags = []
       tags.each do |k, v|
+        raise ArgumentError, "Tag key is too long: #{k.length} (max 256 characters)" unless k.length <= 256
+        raise ArgumentError, "Tag value is too long #{v.length} (max 256 characters)" unless v.length <= 256
         envelope_tags << ::Sonde::Envelope::TagsEntry.new(:key => k, :value => v)
       end
       envelope_tags
