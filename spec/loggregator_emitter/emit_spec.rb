@@ -396,7 +396,7 @@ describe LoggregatorEmitter do
         messages = @server.messages
         expect(messages.length).to eq 1
         logMessage = messages[0].logMessage
-        expect(logMessage.message.bytesize <= LoggregatorEmitter::Emitter::MAX_MESSAGE_BYTE_SIZE).to be_true
+        expect(logMessage.message.bytesize <= LoggregatorEmitter::Emitter::MAX_MESSAGE_BYTE_SIZE).to be true
         expect(logMessage.message.slice(-9..-1)).to eq("TRUNCATED")
       end
 
