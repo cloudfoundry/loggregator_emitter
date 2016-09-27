@@ -11,6 +11,8 @@ module LoggregatorEmitter
 
     MAX_MESSAGE_BYTE_SIZE = (9 * 1024) - 512
     TRUNCATED_STRING = "TRUNCATED"
+    MAX_TAG_LENGTH = 256
+    MAX_TAGS = 10
 
     def initialize(loggregator_server, origin, source_type, source_instance = nil)
       @host, @port = loggregator_server.split(/:([^:]*$)/)
@@ -71,10 +73,13 @@ module LoggregatorEmitter
     end
 
     def set_tags(tags)
+      if tags.length > MAX_TAGS
+        raise ArgumentError, "Too many tags. Max is #{MAX_TAGS}"
+      end
       envelope_tags = []
       tags.each do |k, v|
-        raise ArgumentError, "Tag key is too long: #{k.length} (max 256 characters)" unless k.length <= 256
-        raise ArgumentError, "Tag value is too long #{v.length} (max 256 characters)" unless v.length <= 256
+        raise ArgumentError, "Tag key is too long: #{k.length} (max #{MAX_TAG_LENGTH} characters)" unless k.length <= MAX_TAG_LENGTH
+        raise ArgumentError, "Tag value is too long #{v.length} (max #{MAX_TAG_LENGTH} characters)" unless v.length <= MAX_TAG_LENGTH
         envelope_tags << ::Sonde::Envelope::TagsEntry.new(:key => k, :value => v)
       end
       envelope_tags

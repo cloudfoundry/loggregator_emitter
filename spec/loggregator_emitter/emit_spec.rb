@@ -4,18 +4,17 @@ require "support/fake_loggregator_server"
 require "loggregator_emitter"
 
 describe LoggregatorEmitter do
-
-  before :all do
+  before do
     @free_port = test_port
     @server = FakeLoggregatorServer.new(@free_port)
+  end
+
+  before :each do
     @server.start
   end
 
-  after :all do
+  after :each do
     @server.stop
-  end
-
-  before do
     @server.reset
   end
 
@@ -84,6 +83,22 @@ describe LoggregatorEmitter do
     end
     expected_tags
   end
+
+  describe "max_tags" do
+    it "throws an exception when there are more than 10 tags" do
+      tags = {}
+      for i in 0..10
+        tags["tag#{i}"] = "value#{i}"
+      end
+
+      emitter = LoggregatorEmitter::Emitter.new("0.0.0.0:#{@free_port}", "origin", "API", 42)
+
+      Timecop.freeze timestamp do
+        expect { emitter.emit("my_app_id", "Hello there!", tags) }.to raise_error(ArgumentError)
+      end
+    end
+  end
+
 
   describe "max_tag_length" do
     it "throws an exception when the key is too long" do
